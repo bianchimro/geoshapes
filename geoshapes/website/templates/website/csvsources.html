@@ -1,0 +1,20 @@
+{% extends "website/base.html" %}
+{% load url from future %}
+{% block content %}
+
+<div class="container">
+
+    <div class="row">
+        <div class="span12">
+        <h2>CSV Sources</h2>
+        <ul class="nav">
+            {% for source in sources %}
+                <li>{{ source.id }} <a href="{% url "website.views.csvsource" source.id %}">a</a></li>
+            {% endfor %}
+        </ul>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
