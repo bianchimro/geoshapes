@@ -117,7 +117,7 @@ def get_cached_model(app_label, model_name, regenerate=False, get_local_hash=lam
 
     # Before returning our locally cached model, check that it is still current
     if previous_model is not None and not regenerate:
-        CACHE_KEY = utils.HASH_CACHE_TEMPLATE % (app_label, model_name)
+        CACHE_KEY = HASH_CACHE_TEMPLATE % (app_label, model_name)
         if cache.get(CACHE_KEY) != get_local_hash(previous_model):
             logging.debug("Local and shared dynamic model hashes are different: %s (local) %s (shared)" % (get_local_hash(previous_model), cache.get(CACHE_KEY)))
             regenerate = True
@@ -127,7 +127,7 @@ def get_cached_model(app_label, model_name, regenerate=False, get_local_hash=lam
         previous_model = None
         # Django keeps a cache of registered models, we need to make room for
         # our new one
-        utils.remove_from_model_cache(app_label, model_name)
+        remove_from_model_cache(app_label, model_name)
 
     return previous_model
 
@@ -163,13 +163,19 @@ def create_db_table(model_class):
 
 
 def delete_db_table(model_class):
+    print "into delete_db_table"
     table_name = model_class._meta.db_table
     db.start_transaction()
-    if (connection.introspection.table_name_converter(table_name) 
-                        in connection.introspection.table_names()):
+    try:
         db.delete_table(table_name)
+    except Exception, e:
+        print e
+        pass
+        #raise
+    print "Deleted table '%s'" % table_name
     logger.debug("Deleted table '%s'" % table_name)
     db.commit_transaction()
+    print "out of delete_deb_table"
 
 
 def _get_fields(model_class):

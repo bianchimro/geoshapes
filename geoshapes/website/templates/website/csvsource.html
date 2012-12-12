@@ -16,14 +16,18 @@
                 <tr>
                     <td>Name</td>
                     <td>Type</td>
+                    <td></td>
                 </tr>
-                <tbody data-bind="foreach: descriptorItems">
+                <tbody data-bind="foreach: descriptorItems()">
                     <td>
                         <select data-bind="value:name, options:$parent.allowed_names">
                     </td>
                     <td>
                     <select data-bind="value:type, options:$parent.allowed_types">
                     </select>
+                    </td>
+                    <td>
+                        <span class="close" data-bind="click: $parent.removeDescriptor">x</span>
                     </td>
                                     
                 </tbody>
@@ -85,9 +89,12 @@
             
             self.addItem = function(){
                 var item = new DescriptorItem();
-                self.descriptorItems.push(ko.observable(item));
+                self.descriptorItems.push(item);
             };    
             
+            self.removeDescriptor = function(descriptor){
+                self.descriptorItems.remove(descriptor);
+            };
             
             self.deserialize = function(obj){
             
@@ -97,7 +104,7 @@
                     
                     var descriptor = obj.descriptors[i];
                     var item = new DescriptorItem({name:descriptor.name, type:descriptor.type, id:descriptor.id });           
-                    self.descriptorItems.push(ko.observable(item));
+                    self.descriptorItems.push(item);
                     
                 }
             };
@@ -111,7 +118,7 @@
                 };
                 var descriptors = []
                 for(var i=0,n=self.descriptorItems().length;i<n;i++){
-                    var k = self.descriptorItems()[i]();
+                    var k = self.descriptorItems()[i];
                     var ser = k.serialize();
                     descriptors.push(ser);
                 
@@ -133,6 +140,7 @@
                         console.log("r", response);
                         if(response.id){
                             self.deserialize(response);
+                            ajaxutils.alertMessage("ww", "alert-success");
                         }
                     }
                 
@@ -150,9 +158,7 @@
                     url : load_data_url,
                     success : function(response){
                         console.log("r", response);
-                        if(response.id){
-                            self.deserialize(response);
-                        }
+                        ajaxutils.alertMessage("ww", "alert-success");
                     }
                 
                 });
@@ -172,6 +178,7 @@
                     data: data,
                     success : function(response){
                         console.log("r", response);
+                        ajaxutils.alertMessage("saved", "alert-success");
                     }
                 
                 });

@@ -32,6 +32,9 @@ from shapesengine.utils import instance_dict
 
 from shapesengine.models import *
 
+#TODO: handle errors in ajax responses
+#TODO: add data preview
+
 
 def index(request):
     
@@ -67,22 +70,27 @@ def csvsource(request, source_id):
         context_instance = RequestContext(request))
 
 
-
+#TODO: this has some issues when descriptor does not exist
 def descriptor_ajax(request, source_id):
 
     source = CsvSource.objects.get(pk=int(source_id))
-                
+    
+    print "#!", source            
     if request.POST:
     
         if request.POST['id']:
             id_descriptor = int(request.POST['id'])
-            descriptor = CsvSourceDescriptor.objects.select_related().get(pk = id_descriptor)
+            print "yyy", id_descriptor
+            descriptor = CsvSourceDescriptor.objects.get(pk = id_descriptor)
+        
         else:
-            descriptor = CsvSourceDescriptor(source = source)
+            descriptor = CsvSourceDescriptor(source = source, name = "Descriptor" + str(source.id))
+            print "zzzz"
             descriptor.save()
         
         try:
-            descriptor.descriptors.all().delete()
+            for d in descriptor.descriptors.all():
+                d.delete()
         except:
             pass
         
@@ -124,7 +132,8 @@ def descriptor_ajax(request, source_id):
     jsonOutput = json.dumps(out, cls=DjangoJSONEncoder)
     return HttpResponse(jsonOutput,  mimetype="application/json")
     
-    
+
+#TODO: use POST to make changes...    
 def load_data_ajax(request, source_id):
     
     source = CsvSource.objects.get(pk=int(source_id))
@@ -140,8 +149,6 @@ def load_data_ajax(request, source_id):
         print 1
     
     
-        
-        
 
     jsonOutput = json.dumps(out, cls=DjangoJSONEncoder)
     return HttpResponse(jsonOutput,  mimetype="application/json")
