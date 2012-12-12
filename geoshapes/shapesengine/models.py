@@ -225,9 +225,6 @@ class SourceDescriptor(models.Model):
             instance = Dataset(**kwargs)
             instance.save()
         
-    class Meta:
-        abstract = True
-    
 
 
 
@@ -258,12 +255,6 @@ class SourceDescriptorItem(models.Model):
 
     def get_field_name(self):
         return slugify(self.name).replace("-", "_")
-
-#todo: do not subclass
-class CsvSourceDescriptor(SourceDescriptor):
-    pass
-
-
 
 
 

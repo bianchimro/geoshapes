@@ -74,17 +74,15 @@ def csvsource(request, source_id):
 def descriptor_ajax(request, source_id):
 
     source = CsvSource.objects.get(pk=int(source_id))
-    
-    print "#!", source            
     if request.POST:
     
         if request.POST['id']:
             id_descriptor = int(request.POST['id'])
             print "yyy", id_descriptor
-            descriptor = CsvSourceDescriptor.objects.get(pk = id_descriptor)
+            descriptor = SourceDescriptor.objects.get(pk = id_descriptor)
         
         else:
-            descriptor = CsvSourceDescriptor(source = source, name = "Descriptor" + str(source.id))
+            descriptor = SourceDescriptor(source = source, name = "Descriptor" + str(source.id))
             print "zzzz"
             descriptor.save()
         
@@ -119,11 +117,11 @@ def descriptor_ajax(request, source_id):
     
     else:
         try:
-            descriptor  = CsvSourceDescriptor.objects.select_related().get(source=source)
+            descriptor  = SourceDescriptor.objects.select_related().get(source=source)
             
         except:
             
-            descriptor = CsvSourceDescriptor(source = source)
+            descriptor = SourceDescriptor(source = source)
             descriptor.save()
     
         out = instance_dict(descriptor, recursive=True)
@@ -139,7 +137,7 @@ def load_data_ajax(request, source_id):
     source = CsvSource.objects.get(pk=int(source_id))
      
     try:
-        descr = CsvSourceDescriptor.objects.get(source=source)
+        descr = SourceDescriptor.objects.get(source=source)
         descr.load_data()
     except:
         pass
