@@ -79,10 +79,10 @@ def descriptor_ajax(request, source_id):
         if request.POST['id']:
             id_descriptor = int(request.POST['id'])
             print "yyy", id_descriptor
-            descriptor = SourceDescriptor.objects.get(pk = id_descriptor)
+            descriptor = DatasetDescriptor.objects.get(pk = id_descriptor)
         
         else:
-            descriptor = SourceDescriptor(source = source, name = "Descriptor" + str(source.id))
+            descriptor = DatasetDescriptor(source = source, name = "Descriptor" + str(source.id))
             print "zzzz"
             descriptor.save()
         
@@ -98,14 +98,14 @@ def descriptor_ajax(request, source_id):
                 descr = None
                 if  descriptor_item['id']:
                     try:
-                        descr = SourceDescriptorItem.objects.get(pk= descriptor_item['id'])
+                        descr = DatasetDescriptorItem.objects.get(pk= descriptor_item['id'])
                         print 1
                     except:
                         pass
                         print 2
                 if not descr:
                     print "3"
-                    descr = SourceDescriptorItem(descriptor_object=descriptor) 
+                    descr = DatasetDescriptorItem(descriptor_object=descriptor) 
                 
                 descr.name = descriptor_item['name']
                 descr.type=descriptor_item['type']
@@ -117,11 +117,11 @@ def descriptor_ajax(request, source_id):
     
     else:
         try:
-            descriptor  = SourceDescriptor.objects.select_related().get(source=source)
+            descriptor  = DatasetDescriptor.objects.select_related().get(source=source)
             
         except:
             
-            descriptor = SourceDescriptor(source = source)
+            descriptor = DatasetDescriptor(source = source)
             descriptor.save()
     
         out = instance_dict(descriptor, recursive=True)
@@ -137,7 +137,7 @@ def load_data_ajax(request, source_id):
     source = CsvSource.objects.get(pk=int(source_id))
      
     try:
-        descr = SourceDescriptor.objects.get(source=source)
+        descr = DatasetDescriptor.objects.get(source=source)
         descr.load_data()
     except:
         pass

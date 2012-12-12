@@ -29,7 +29,6 @@ from shapesengine.dynamic_models import get_dataset_model, build_existing_survey
 DEFAULT_APP_NAME = 'shapesengine'
 
 
-#TODO: rename SourceDescriptor to DatasetDescriptor
 #TODO: add classes for automatic creation of descriptors
 #TODO: add ShapeFile source
 
@@ -156,12 +155,12 @@ class CsvSource(Source):
     
     
 #TODO: make concrete class. remove subclasses
-class SourceDescriptor(models.Model):
+class DatasetDescriptor(models.Model):
     
     name = models.CharField(max_length=200)
     #todo: not necessary one to one....
     source = models.OneToOneField(Source, related_name='descriptor')
-    descriptors = generic.GenericRelation('SourceDescriptorItem', content_type_field='descriptor_type',
+    descriptors = generic.GenericRelation('DatasetDescriptorItem', content_type_field='descriptor_type',
                                object_id_field='descriptor_id')
     
 
@@ -174,7 +173,7 @@ class SourceDescriptor(models.Model):
             self.name = self.__class__.__name__ + str(self.source.id) 
     
         
-        return super(SourceDescriptor, self).save( *args, **kwargs);
+        return super(DatasetDescriptor, self).save( *args, **kwargs);
         
         
     
@@ -242,9 +241,9 @@ for x in DESCRIPTORS_TYPES_MAP:
     DESCRIPTOR_TYPE_CHOICES.append([x,x])
 
 
-class SourceDescriptorItem(models.Model):
+class DatasetDescriptorItem(models.Model):
     
-    #descriptor = models.ForeignKey(SourceDescriptor, related_name = 'items')
+    #descriptor = models.ForeignKey(DatasetDescriptor, related_name = 'items')
     descriptor_type = models.ForeignKey(ContentType)
     descriptor_id = models.PositiveIntegerField()
     descriptor_object = generic.GenericForeignKey('descriptor_type', 'descriptor_id')
