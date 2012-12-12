@@ -21,7 +21,7 @@ from shapesengine import utils
 from shapesengine import helpers
 from model_utils.managers import InheritanceManager
 
-from shapesengine.dynamic_models import get_dataset_model, build_existing_survey_dataset_models
+from shapesengine.dynamic_models import get_dataset_model
 
 #from shapesengine import signals
 
@@ -160,11 +160,6 @@ class DatasetDescriptor(models.Model):
     name = models.CharField(max_length=200)
     #todo: not necessary one to one....
     source = models.OneToOneField(Source, related_name='descriptor')
-    descriptors = generic.GenericRelation('DatasetDescriptorItem', content_type_field='descriptor_type',
-                               object_id_field='descriptor_id')
-    
-
-    
 
 
     def save(self, *args, **kwargs):
@@ -190,10 +185,10 @@ class DatasetDescriptor(models.Model):
         
         fields = {}
         parsers = {}
-        for descriptor in self.descriptors.all():
-            print descriptor.type, descriptor.name
-            mapped_type =  DESCRIPTORS_TYPES_MAP[descriptor.type]
-            field_name = str(descriptor.get_field_name())
+        for descriptor_item in self.items.all():
+            print descriptor_item.type, descriptor_item.name
+            mapped_type =  DESCRIPTORS_TYPES_MAP[descriptor_item.type]
+            field_name = str(descriptor_item.get_field_name())
             fields[field_name] = DyField(name=field_name, type=mapped_type['model'], model=datamodel, args=mapped_type['args'], kwargs=mapped_type['kwargs'])
             fields[field_name].save()
             parsers[field_name] = mapped_type['parser']
@@ -243,10 +238,7 @@ for x in DESCRIPTORS_TYPES_MAP:
 
 class DatasetDescriptorItem(models.Model):
     
-    #descriptor = models.ForeignKey(DatasetDescriptor, related_name = 'items')
-    descriptor_type = models.ForeignKey(ContentType)
-    descriptor_id = models.PositiveIntegerField()
-    descriptor_object = generic.GenericForeignKey('descriptor_type', 'descriptor_id')
+    descriptor = models.ForeignKey(DatasetDescriptor, related_name = 'items')
     
     order = models.IntegerField(default=0)
     name = models.CharField(max_length=200)
@@ -256,30 +248,11 @@ class DatasetDescriptorItem(models.Model):
         return slugify(self.name).replace("-", "_")
 
 
-
-#DyModel.objects.all().delete()
-#DyField.objects.all().delete()
-
-#TODO: user method in helpers...
-for x in DyModel.objects.all():
-    Dataset = x.get_dataset_model(regenerate=True, notify_changes=True)
-    #helpers.delete_db_table(Dataset)
-    #helpers.create_db_table(Dataset)
-    #helpers.add_necessary_db_columns(Dataset)
-    helpers.reregister_in_admin(admin.site, Dataset)
-    helpers.notify_model_change(Dataset)
-
-#post_save.connect(signals.survey_post_save, sender=Survey)
-
-
+#creating stored models
+from shapesengine.dynamic_models import build_existing_dataset_models
 """
-
-
-x = DyModel(name="test")
-x.save()
-
-x1 = DyField(name='ex', type='CharField', model=x, kwargs={'max_length': 100})
-x1.save()
-
-x.rebuild()
+try:
+    build_existing_dataset_models(DyModel)
+except:
+    pass    
 """

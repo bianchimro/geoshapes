@@ -100,9 +100,9 @@
             
                 self.id = obj.id;
                 self.descriptorItems([]);
-                for(var i=0,n=obj.descriptors.length;i<n;i++){
+                for(var i=0,n=obj.items.length;i<n;i++){
                     
-                    var descriptor = obj.descriptors[i];
+                    var descriptor = obj.items[i];
                     var item = new DescriptorItem({name:descriptor.name, type:descriptor.type, id:descriptor.id });           
                     self.descriptorItems.push(item);
                     
@@ -116,14 +116,14 @@
                 var data = {
                     id : self.id
                 };
-                var descriptors = []
+                var items = []
                 for(var i=0,n=self.descriptorItems().length;i<n;i++){
                     var k = self.descriptorItems()[i];
                     var ser = k.serialize();
-                    descriptors.push(ser);
+                    items.push(ser);
                 
                 }
-                data.descriptors = JSON.stringify(descriptors)
+                data.items = JSON.stringify(items)
                 console.log(data)
                 return data;
             };

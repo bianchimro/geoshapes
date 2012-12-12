@@ -60,11 +60,11 @@ def get_dataset_model(dymodel, regenerate=False, notify_changes=True):
     return model
 
 
-def build_existing_survey_dataset_models():
+#TODO: check if a model is alive ... (if using alive attribute)
+def build_existing_dataset_models(model):
     """ Builds all existing dynamic models at once. """
     # To avoid circular imports, the model is retrieved from the model cache
-    DyModel = models.get_model(DEFAULT_APP_NAME, 'DyModel')
-    for dymodel in DyModel.objects.all():
+    for dymodel in model.objects.all():
         Dataset = get_dataset_model(dymodel)
         # Create the table if necessary, shouldn't be necessary anyway
         helpers.create_db_table(Dataset)

@@ -87,13 +87,13 @@ def descriptor_ajax(request, source_id):
             descriptor.save()
         
         try:
-            for d in descriptor.descriptors.all():
+            for d in descriptor.items.all():
                 d.delete()
         except:
             pass
         
-        if 'descriptors' in request.POST:
-            descriptor_items = json.loads(request.POST['descriptors'])
+        if 'items' in request.POST:
+            descriptor_items = json.loads(request.POST['items'])
             for descriptor_item in descriptor_items:
                 descr = None
                 if  descriptor_item['id']:
@@ -105,7 +105,7 @@ def descriptor_ajax(request, source_id):
                         print 2
                 if not descr:
                     print "3"
-                    descr = DatasetDescriptorItem(descriptor_object=descriptor) 
+                    descr = DatasetDescriptorItem(descriptor=descriptor) 
                 
                 descr.name = descriptor_item['name']
                 descr.type=descriptor_item['type']
@@ -140,7 +140,7 @@ def load_data_ajax(request, source_id):
         descr = DatasetDescriptor.objects.get(source=source)
         descr.load_data()
     except:
-        pass
+        raise
         
     out = {}
     if request.POST:
