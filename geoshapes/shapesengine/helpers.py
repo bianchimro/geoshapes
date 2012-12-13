@@ -163,19 +163,22 @@ def create_db_table(model_class):
 
 
 def delete_db_table(model_class):
-    print "into delete_db_table"
+    
     table_name = model_class._meta.db_table
+    
     db.start_transaction()
     try:
         db.delete_table(table_name)
+        db.commit_transaction()
     except Exception, e:
         print e
         pass
+        db.rollback_transaction()
         #raise
-    print "Deleted table '%s'" % table_name
+    
     logger.debug("Deleted table '%s'" % table_name)
-    db.commit_transaction()
-    print "out of delete_deb_table"
+    
+    
 
 
 def _get_fields(model_class):
@@ -212,7 +215,7 @@ def add_necessary_db_columns(model_class):
 
 
 def rename_db_column(model_class, old_name, new_name):
-    """ Rename a sensor's database column. """
+    """ Rename a database column. """
     table_name = model_class._meta.db_table
     db.start_transaction()
     db.rename_column(table_name, old_name, new_name) 

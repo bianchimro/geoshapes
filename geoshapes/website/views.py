@@ -93,7 +93,9 @@ def descriptor_ajax(request, source_id):
             pass
         
         if 'items' in request.POST:
+
             descriptor_items = json.loads(request.POST['items'])
+            print "zzz", descriptor_items
             for descriptor_item in descriptor_items:
                 descr = None
                 if  descriptor_item['id']:
@@ -108,7 +110,7 @@ def descriptor_ajax(request, source_id):
                     descr = DatasetDescriptorItem(descriptor=descriptor) 
                 
                 descr.name = descriptor_item['name']
-                descr.type=descriptor_item['type']
+                descr.type= descriptor_item['type']
                 
                 descr.save()
         
@@ -120,34 +122,35 @@ def descriptor_ajax(request, source_id):
             descriptor  = DatasetDescriptor.objects.select_related().get(source=source)
             
         except:
-            
             descriptor = DatasetDescriptor(source = source)
             descriptor.save()
     
-        out = instance_dict(descriptor, recursive=True)
-        
-
+        out = instance_dict(descriptor, recursive=True, related_names=['items'])
+        print out
+    #todo: handle errors
     jsonOutput = json.dumps(out, cls=DjangoJSONEncoder)
     return HttpResponse(jsonOutput,  mimetype="application/json")
     
 
-#TODO: use POST to make changes...    
 def load_data_ajax(request, source_id):
     
     source = CsvSource.objects.get(pk=int(source_id))
-     
+    print "*" * 10
+    print "s", source
     try:
         descr = DatasetDescriptor.objects.get(source=source)
-        descr.load_data()
+        print "*" * 10
+        print descr
     except:
         raise
         
     out = {}
-    if request.POST:
-        print 1
+    if request.method == 'POST':
+        print "load_data_view"
+        descr.load_data()
+    print "aaaaa"
     
-    
-
+    #todo: handle errors
     jsonOutput = json.dumps(out, cls=DjangoJSONEncoder)
     return HttpResponse(jsonOutput,  mimetype="application/json")
     

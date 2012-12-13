@@ -22,7 +22,7 @@ from shapesengine import helpers
 from model_utils.managers import InheritanceManager
 
 from shapesengine.dynamic_models import get_dataset_model
-
+from shapesengine.mappings import *
 #from shapesengine import signals
 
 
@@ -47,19 +47,20 @@ class DyModel(models.Model):
     def __unicode__(self):
         return u'%s' % self.name
         
-    
-    #TODO: change name and add options    
-    def rebuild(self):
-        print "a"
+
+    def build_dataset(self, regenerate=True, notify_changes=True, reregister_in_admin=True, create_db_table=True):
         Dataset = self.get_dataset_model(regenerate=True, notify_changes=True)
-        print "b"
+        if create_db_table:        
+            helpers.delete_db_table(Dataset)
+            helpers.create_db_table(Dataset)
+            helpers.add_necessary_db_columns(Dataset)
         
-        helpers.delete_db_table(Dataset)
-        helpers.create_db_table(Dataset)
-        helpers.add_necessary_db_columns(Dataset)
-        
-        helpers.reregister_in_admin(admin.site, Dataset)
-        helpers.notify_model_change(Dataset)
+        if reregister_in_admin:
+            helpers.reregister_in_admin(admin.site, Dataset)
+            
+        if notify_changes:
+            helpers.notify_model_change(Dataset)
+            
         return Dataset
         
     @property
@@ -153,13 +154,10 @@ class CsvSource(Source):
 
     
     
-    
-#TODO: make concrete class. remove subclasses
 class DatasetDescriptor(models.Model):
     
     name = models.CharField(max_length=200)
-    #todo: not necessary one to one....
-    source = models.OneToOneField(Source, related_name='descriptor')
+    source = models.ForeignKey(Source, related_name='descriptor', null=True, blank=True)
 
 
     def save(self, *args, **kwargs):
@@ -171,10 +169,7 @@ class DatasetDescriptor(models.Model):
         return super(DatasetDescriptor, self).save( *args, **kwargs);
         
         
-    
-    #todo: split into simpler methods (generate_dymodel, load_data_from_source) 
-    def load_data(self):
-
+    def generate_dymodel(self):
         try:
             datamodel = DyModel.objects.get(name=self.name)
             datamodel.dyfields.all().delete()
@@ -186,17 +181,21 @@ class DatasetDescriptor(models.Model):
         fields = {}
         parsers = {}
         for descriptor_item in self.items.all():
-            print descriptor_item.type, descriptor_item.name
             mapped_type =  DESCRIPTORS_TYPES_MAP[descriptor_item.type]
             field_name = str(descriptor_item.get_field_name())
             fields[field_name] = DyField(name=field_name, type=mapped_type['model'], model=datamodel, args=mapped_type['args'], kwargs=mapped_type['kwargs'])
             fields[field_name].save()
             parsers[field_name] = mapped_type['parser']
-            
-        print 12
-        Dataset = datamodel.rebuild()
-        print Dataset
-        
+
+        return datamodel, fields, parsers
+    
+    
+    
+    #todo: split into simpler methods (generate_dymodel, load_data_from_source) 
+    def load_data(self):
+    
+        datamodel, fields, parsers = self.generate_dymodel()
+        Dataset = datamodel.build_dataset()
         
         actual_source = Source.objects_resolved.select_subclasses().get(pk=self.source.id)
         data = actual_source.get_data()
@@ -216,20 +215,16 @@ class DatasetDescriptor(models.Model):
                     print f, e
                     kwargs[f]= None
             
-            instance = Dataset(**kwargs)
+            not_none_kwargs = {}
+            for k in kwargs:
+                v = kwargs[k]
+                if v is not None:
+                    not_none_kwargs[k] = v
+            
+            instance = Dataset(**not_none_kwargs)
             instance.save()
         
-
-
-
-
-#TODO: move to separate module
-DESCRIPTORS_TYPES_MAP = {
-    'text' : { 'model': 'TextField', 'args' : (), 'kwargs': {'null':True, 'blank':True}, 'parser': str},
-    'string' : { 'model': 'CharField', 'args' : (), 'kwargs': { 'max_length' : 200,'null':True, 'blank':True } , 'parser' : str },
-    'integer' : { 'model': 'IntegerField', 'args' : (), 'kwargs': {'null':True, 'blank':True }, 'parser': int},
-    'float' : { 'model': 'FloatField', 'args' : (), 'kwargs': { 'null':True, 'blank':True }, 'parser': float}
-}
+        return Dataset
 
 DESCRIPTOR_TYPE_CHOICES = []
 for x in DESCRIPTORS_TYPES_MAP:
