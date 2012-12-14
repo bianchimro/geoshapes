@@ -41,19 +41,29 @@ class DyModel(models.Model):
     Dynamic model
     """
 
-    name = models.CharField(max_length=200, unique=True)
     alive = models.BooleanField(default=True)
+    has_table = models.BooleanField(default=False)
+    hash_value = models.TextField(null=True, blank=True)
+    
+    descriptor = models.OneToOneField("DatasetDescriptor", related_name="dymodel")
+    
     
     def __unicode__(self):
-        return u'%s' % self.name
+        return u'DyModel: %s' % self.id
         
 
     def build_dataset(self, regenerate=True, notify_changes=True, reregister_in_admin=True, create_db_table=True):
+        
         Dataset = self.get_dataset_model(regenerate=True, notify_changes=True)
+        
         if create_db_table:        
             helpers.delete_db_table(Dataset)
             helpers.create_db_table(Dataset)
             helpers.add_necessary_db_columns(Dataset)
+            
+            self.has_table = True
+            self.hash_value = self.get_hash_string()
+            self.save()
         
         if reregister_in_admin:
             helpers.reregister_in_admin(admin.site, Dataset)
@@ -68,6 +78,12 @@ class DyModel(models.Model):
         " Convenient access the relevant model class for the dataset "
         return get_dataset_model(self)
 
+    @property
+    def dirty(self):
+        current_hash = self.get_hash_string()
+        return current_hash != self.hash_value
+    
+    
     def get_dataset_model(self, regenerate=False, notify_changes=True):
         return get_dataset_model(self, regenerate=regenerate, notify_changes=notify_changes)
 
@@ -88,6 +104,7 @@ class DyField(models.Model):
     """
 
     name=models.CharField(max_length=200)
+    label=models.CharField(max_length=200)
     type=models.CharField(max_length=200)
     model = models.ForeignKey(DyModel, related_name='dyfields')
     args = PickledObjectField()
@@ -103,12 +120,16 @@ class DyField(models.Model):
         field = field_type(*self.args, **self.kwargs)
         return field
 
-
+    def save(self, *args, **kwargs):
+        if not self.label:
+            self.label=self.name
+        return super(DyField, self).save(*args, **kwargs)
+    
 
 class Source(models.Model):
 
-    fields = PickledObjectField()
-    
+    #TODO: add this field
+    #source_class = models.Charfield(max_lenght=200)
     objects = models.Manager()
     objects_resolved = InheritanceManager()
 
@@ -147,6 +168,7 @@ class CsvSource(Source):
     
     def save(self, *args, **kwargs):
     
+        #self.source_class = self.__class__.__name__
         return super(CsvSource, self).save(*args, **kwargs)
         
     def __unicode__(self):
@@ -156,53 +178,81 @@ class CsvSource(Source):
     
 class DatasetDescriptor(models.Model):
     
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200, default="Descriptor")
     source = models.ForeignKey(Source, related_name='descriptor', null=True, blank=True)
-
-
+    
     def save(self, *args, **kwargs):
-    
-        if not self.name:
-            self.name = self.__class__.__name__ + str(self.source.id) 
-    
-        
         return super(DatasetDescriptor, self).save( *args, **kwargs);
+          
+    @property
+    def data_url(self):
+        return 1
         
-        
+    @property
+    def metadata(self):
+        if self.dymodel:
+            meta = self.generate_meta()
+            out = {}
+
+            for f in meta['fields']:
+                name = f
+                inst = meta['fields'][f]
+                out[name] = inst['type']
+            return out
+        return None
+
     def generate_dymodel(self):
         try:
-            datamodel = DyModel.objects.get(name=self.name)
+            datamodel = self.dymodel
             datamodel.dyfields.all().delete()
-
         except:
-            datamodel = DyModel(name=self.name)
+            datamodel = DyModel(descriptor=self)
             datamodel.save()
         
+        return datamodel
+        
+    
+    def generate_dymodel_fields(self):
+        datamodel = self.dymodel
+            
         fields = {}
-        parsers = {}
         for descriptor_item in self.items.all():
             mapped_type =  DESCRIPTORS_TYPES_MAP[descriptor_item.type]
             field_name = str(descriptor_item.get_field_name())
-            fields[field_name] = DyField(name=field_name, type=mapped_type['model'], model=datamodel, args=mapped_type['args'], kwargs=mapped_type['kwargs'])
+            label = descriptor_item.name
+            fields[field_name] = DyField(name=field_name, label=label,type=mapped_type['model'], model=datamodel, args=mapped_type['args'], kwargs=mapped_type['kwargs'])
             fields[field_name].save()
+        return fields
+    
+    def generate_meta(self):
+    
+        datamodel = self.dymodel
+        fields = {}
+        parsers = {}
+    
+        for descriptor_item in self.items.all():
+            mapped_type =  DESCRIPTORS_TYPES_MAP[descriptor_item.type]
+            field_name = str(descriptor_item.get_field_name())
+            label = descriptor_item.name
+            fields[field_name] = {"name":field_name, "label":label,"type":descriptor_item.type}
             parsers[field_name] = mapped_type['parser']
 
-        return datamodel, fields, parsers
+        return  {'fields':fields, 'parsers':parsers}
     
     
     
     #todo: split into simpler methods (generate_dymodel, load_data_from_source) 
     def load_data(self):
-    
-        datamodel, fields, parsers = self.generate_dymodel()
+        datamodel= self.generate_dymodel()
+        fields = self.generate_dymodel_fields()
+        meta = self.generate_meta()
+        parsers = meta['parsers']
         Dataset = datamodel.build_dataset()
-        
         actual_source = Source.objects_resolved.select_subclasses().get(pk=self.source.id)
         data = actual_source.get_data()
         
         #klass = datamodel.generate_model()
         Dataset.objects.all().delete()
-        
         for d in data:
             kwargs = {}
             for f in fields:

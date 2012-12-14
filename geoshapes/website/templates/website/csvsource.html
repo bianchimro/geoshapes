@@ -1,4 +1,5 @@
 {% extends "website/base.html" %}
+{% load url from future %}
 
 {% block content %}
 
@@ -10,34 +11,15 @@
         {{ source.csv.path }}
         </div>
         
-        <div class="span12" id="descriptor-container">
-        <form>
-            <table class="table">
-                <tr>
-                    <td>Name</td>
-                    <td>Type</td>
-                    <td></td>
-                </tr>
-                <tbody data-bind="foreach: descriptorItems()">
-                    <td>
-                        <select data-bind="value:name, options:$parent.allowed_names">
-                    </td>
-                    <td>
-                    <select data-bind="value:type, options:$parent.allowed_types">
-                    </select>
-                    </td>
-                    <td>
-                        <span class="close" data-bind="click: $parent.removeDescriptor">x</span>
-                    </td>
-                                    
-                </tbody>
-            </table>
-            
-            <button class="btn" data-bind="click: addItem">Add item</button>
+        <div class="span12" id="descriptors-container">
+        <ul class="nav">
+            {% for descriptor in descriptors %}
+                <li><a href="{% url "website.views.descriptor" descriptor.id %}">{{ descriptor.name }}</a></li>
+            {% endfor %}
+        </ul>
+        
+        <a class="btn" href="{% url "website.views.add_source_descriptor" source.id %}">Add a descriptor</a>
         </div>
-        </form>
-        <button class="btn btn-danger" data-bind="click: save">Save description</button>
-        <button class="btn btn-danger" data-bind="click: loadData">Load Data</button>
         
     </div>
 </div>
@@ -49,154 +31,9 @@
 {% block extra_body %}
 <script>
 
-    $(function(){
-        
-        var allowed_types = JSON.parse('{{allowed_types|safe}}');
-        var allowed_names = JSON.parse('{{allowed_names|safe}}');
-        var descriptor_resource_url = '{{descriptor_resource_url|safe}}';
-        var load_data_url = '{{load_data_url|safe}}';
-        var source_id = parseInt('{{source.id}}');
     
-        var DescriptorItem = function(options){
-            var self=this;
-            var options = options || {};
-            self.name = ko.observable(options.name || allowed_names[0]);
-            self.type = ko.observable(options.type || allowed_types[0]);
-            self.sniffed = ko.observable(false);
-            self.error = '';
-            self.id = options.id || null;
-            
-            
-            self.serialize = function(){
-                var mapping = {
-                    'ignore': ['sniffed', 'error', 'serialize']
-                };
-                var data = ko.mapping.toJS(self, mapping);
-                return data;
+    
 
-            };
-            
-            
-        };
-    
-        var DescriptorForm = function(){
-            var self=this;
-            
-            self.id = null;
-            self.descriptorItems = ko.observableArray([]);
-            self.allowed_types = allowed_types;
-            self.allowed_names = allowed_names;
-            
-            self.addItem = function(){
-                var item = new DescriptorItem();
-                self.descriptorItems.push(item);
-            };    
-            
-            self.removeDescriptor = function(descriptor){
-                self.descriptorItems.remove(descriptor);
-            };
-            
-            self.deserialize = function(obj){
-            
-                self.id = obj.id;
-                self.descriptorItems([]);
-                for(var i=0,n=obj.items.length;i<n;i++){
-                    
-                    var descriptor = obj.items[i];
-                    var item = new DescriptorItem({name:descriptor.name, type:descriptor.type, id:descriptor.id });           
-                    self.descriptorItems.push(item);
-                    
-                }
-            };
-            
-            
-            self.serialize = function(){
-            
-            
-                var data = {
-                    id : self.id
-                };
-                var items = []
-                for(var i=0,n=self.descriptorItems().length;i<n;i++){
-                    var k = self.descriptorItems()[i];
-                    var ser = k.serialize();
-                    items.push(ser);
-                
-                }
-                data.items = JSON.stringify(items)
-                console.log(data)
-                return data;
-            };
-            
-            self.load = function(){
-            
-               
-                $.ajax({
-                    
-                    type : 'GET',
-                    dataType : 'json',
-                    url : descriptor_resource_url,
-                    success : function(response){
-                        console.log("r", response);
-                        if(response.id){
-                            self.deserialize(response);
-                            ajaxutils.alertMessage("ww", "alert-success");
-                        }
-                    }
-                
-                });
-            
-            };
-            
-            self.loadData = function(){
-            
-               
-                $.ajax({
-                    
-                    type : 'POST',
-                    dataType : 'json',
-                    url : load_data_url,
-                    success : function(response){
-                        console.log("r", response);
-                        ajaxutils.alertMessage("ww", "alert-success");
-                    }
-                
-                });
-            
-            };
-            
-            
-            
-            self.save = function(){
-            
-                var data = self.serialize();
-                $.ajax({
-                    
-                    type : 'POST',
-                    dataType : 'json',
-                    url : descriptor_resource_url,
-                    data: data,
-                    success : function(response){
-                        console.log("r", response);
-                        ajaxutils.alertMessage("saved", "alert-success");
-                    }
-                
-                });
-            
-            
-            };
-            
-            
-            self.load();
-            
-        
-        };
-    
-        var descriptorForm = new DescriptorForm();
-        ko.applyBindings(descriptorForm, document.getElementById("descriptor-contaier"));
-    
-    
-    });
 </script>
 
 

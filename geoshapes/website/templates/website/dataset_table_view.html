@@ -1,0 +1,36 @@
+{% extends "website/base.html" %}
+{% load url from future %}
+{% load utilfilters %}
+
+
+{% block content %}
+
+<div class="container">
+
+    <div class="row">
+        <div class="span12">
+        <h2>Table</h2>
+        <a href="{% url "website.views.descriptor" descriptor.id %}">To descriptor</a>
+        <table class="table">
+        <tr>
+            {% for field in meta %}
+            <td>
+            {{ field }}
+            </td>
+            {% endfor %}
+        </tr>
+        {% for row in rows %}
+        <tr>
+          {% for field in meta %}
+         <td>{{ row|lookup:field }}</td>
+        {% endfor %}
+        </tr>
+        {% endfor %}
+        
+        </table>
+        
+    </div>
+</div>
+
+
+{% endblock %}

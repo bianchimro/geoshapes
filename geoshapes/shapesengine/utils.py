@@ -1,7 +1,7 @@
 
     
 from django.db.models.fields.related import ForeignKey    
-def instance_dict(instance, key_format=None, recursive=False, related_names=[]):
+def instance_dict(instance, key_format=None, recursive=False, related_names=[], properties=[]):
     
     "Returns a dictionary containing field names and values for the given instance"
     if key_format:
@@ -37,6 +37,11 @@ def instance_dict(instance, key_format=None, recursive=False, related_names=[]):
         for obj in objects: 
             objs.append(instance_dict(obj))
         d[key(related)] = objs 
+        
+    
+    for prop in properties:
+        value = getattr(instance, prop, None)
+        d[key(prop)] = value 
     
     
     return d
