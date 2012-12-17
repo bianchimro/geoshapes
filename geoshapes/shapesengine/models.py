@@ -15,6 +15,7 @@ from django.contrib.auth.models import User
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
+from django.db.models.loading import get_model
     
 from picklefield.fields import PickledObjectField
 
@@ -138,6 +139,12 @@ class Source(models.Model):
     objects = models.Manager()
     objects_resolved = InheritanceManager()
     
+    
+    def get_subclass(self):
+        mod = get_model('shapesengine', self.source_class)
+        return mod.objects.select_related().get(source_ptr__id = self.id)
+        
+    
     @property
     def default_name(self):
         return None
@@ -255,7 +262,7 @@ class CsvSource(Source):
         return u"%s" % self.csv.path
         
         
-"""        
+
 class ShapeSource(Source):
     
     source_type = "shp"
@@ -286,7 +293,7 @@ class ShapeSource(Source):
         self.inspector.analyze()
         self._inspector_meta = self.inspector.meta
         return self._inspector_meta
-"""    
+
     
 
     

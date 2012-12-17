@@ -53,7 +53,10 @@ def sources(request):
 
 def source(request, source_id):
     
-    source = Source.objects_resolved.select_subclasses().select_related().get(pk=int(source_id))
+    base_source = Source.objects.get(pk=int(source_id))
+    source = base_source.get_subclass()
+    
+    
     descriptors = source.descriptor.all()
     #load_data_url = reverse('website.views.load_data_ajax', args=(source.id,))
     
@@ -72,7 +75,8 @@ def descriptor(request, descriptor_id):
     descriptor = DatasetDescriptor.objects.get(id=int(descriptor_id))
     descriptor_resource_url = reverse("website.views.descriptor_ajax", args=(descriptor_id,))
     
-    source = Source.objects_resolved.select_subclasses().get(id=descriptor.source.id)
+    base_source = Source.objects.get(pk=descriptor.source_id)
+    source = base_source.get_subclass()
 
     descriptor_json = json.dumps(instance_dict(descriptor, recursive=True),cls=DjangoJSONEncoder)
     load_data_url = reverse('website.views.load_data_ajax', args=(descriptor.id,))
@@ -284,8 +288,9 @@ def dataset_table_view(request, descriptor_id):
 
 def load_source_data_ajax(request, source_id):
 
-    #todo: SHOULD BE A POST!
-    source = Source.objects_resolved.select_subclasses().get(pk=int(source_id))
+    base_source = Source.objects.get(pk=int(source_id))
+    source = base_source.get_subclass()
+    
     descriptor = DatasetDescriptor(source=source)
     descriptor.save()
     
