@@ -9,10 +9,11 @@ def date(value, formats=BASE_DATE_FORMATS):
     for format in formats:
         try:
             out = datetime.datetime.strptime(value, format) 
+            print "date found", out
             return out
         except:
             pass
-
+    
     raise ValueError("Could not convert date %s" % value)
     
 

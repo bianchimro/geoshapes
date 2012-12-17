@@ -1,4 +1,5 @@
 import json
+from django.core.serializers.json import DjangoJSONEncoder
     
 from django.db.models.fields.related import ForeignKey    
 def instance_dict(instance, key_format=None, recursive=False, related_names=[], properties=[]):
@@ -18,7 +19,7 @@ def instance_dict(instance, key_format=None, recursive=False, related_names=[], 
                     value = value._get_pk_val()
                 else:
                     value = instance_dict(value)
-            json_val = json.dumps(value)
+            json_val = json.dumps(value, cls=DjangoJSONEncoder)
             d[key(attr)] = value
         except Exception,e:
             print e

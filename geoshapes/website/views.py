@@ -57,7 +57,7 @@ def source(request, source_id):
     descriptors = source.descriptor.all()
     #load_data_url = reverse('website.views.load_data_ajax', args=(source.id,))
     
-    allowed_types = json.dumps(DESCRIPTORS_TYPES_MAP.keys())
+    allowed_types = json.dumps(DESCRIPTORS_TYPES_MAP.keys(),cls=DjangoJSONEncoder)
     allowed_names = json.dumps(source.get_fields())
     
     return render_to_response('website/source.html', 
@@ -77,8 +77,8 @@ def descriptor(request, descriptor_id):
     descriptor_json = json.dumps(instance_dict(descriptor, recursive=True),cls=DjangoJSONEncoder)
     load_data_url = reverse('website.views.load_data_ajax', args=(descriptor.id,))
     dataset_data_url = reverse('website.views.dataset_data_ajax', args=(descriptor.id,))
-    allowed_types = json.dumps(DESCRIPTORS_TYPES_MAP.keys())
-    allowed_names = json.dumps(source.get_fields())
+    allowed_types = json.dumps(DESCRIPTORS_TYPES_MAP.keys(),cls=DjangoJSONEncoder)
+    allowed_names = json.dumps(source.get_fields(),cls=DjangoJSONEncoder)
     
     return render_to_response('website/descriptor.html', 
         {   'descriptor' : descriptor, 
