@@ -7,22 +7,34 @@
 
     <div class="row">
         <div class="span12">
-        <h2>CSV Source</h2>
-        {{ source.csv.path }}
-        </div>
-        
-        <div class="span12" id="descriptors-container">
-            <ul class="nav">
-                {% for descriptor in descriptors %}
-                    <li><a href="{% url "website.views.descriptor" descriptor.id %}">{{ descriptor.name }}</a></li>
-                {% endfor %}
-            </ul>
-            
-            
-            <a class="btn" href="{% url "website.views.add_source_descriptor_csv" source.id %}">Add a descriptor</a>
-            <a class="btn" data-bind="click: loadData">Load data</a>
-        </div>
-        
+            <a class="btn" href="{% url "website.views.sources" %}">To sources list</a>
+            <h2>CSV Source</h2>
+            {{ source.csv.path }}
+
+       </div>
+       <div class="span12" id="descriptors-container">
+           
+           {% if source.has_descriptor_with_table %}
+           
+               <ul class="nav">
+                   {% for descriptor in descriptors %}
+                       <li class="nav-item">
+                       Descriptor
+                       <a class="" href="{% url "website.views.descriptor" descriptor.id %}">View descriptor</a>
+                       <a class="" href="{% url "website.views.dataset_table_view" descriptor.id %}">View as table</a>        
+                       </li>
+                   {% endfor %}
+               </ul>
+               
+               
+               
+               <a class="btn" href="{% url "website.views.add_source_descriptor_csv" source.id %}">Add another descriptor</a>
+           
+           {% else %}
+               <a class="btn btn-danger" data-bind="click: loadData">Load data</a>
+           {% endif %}
+       </div>
+       
     </div>
 </div>
 

@@ -3,6 +3,6 @@ from django.conf import settings
 
 urlpatterns = patterns('shapesengine.views',
     
-    url(r'^ajax-upload$', 'import_uploader', name="my_ajax_upload"),
+    url(r'^ajax-upload$', 'import_uploader', name="ajax_upload"),
 
 )

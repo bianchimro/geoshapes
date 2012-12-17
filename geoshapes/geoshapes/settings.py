@@ -128,6 +128,8 @@ INSTALLED_APPS = (
     'shapesengine',
     'website',
     'debug_toolbar',
+    'django_extensions',
+    'ajaxuploader'
 
     
 )

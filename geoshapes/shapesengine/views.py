@@ -33,22 +33,11 @@ from shapesengine.utils import instance_dict
 from shapesengine.models import *
 
 
-
-
-
-from ajaxuploader.backends.local import LocalUploadBackend
-class AjaxUploadBackend(LocalUploadBackend):
-    UPLOAD_DIR = 'ajax_upload_worktables'
-
-
-from ajaxuploader.views import AjaxFileUploader
-import_uploader = AjaxFileUploader(AjaxUploadBackend)
-
     
 
 from ajaxuploader.backends.local import LocalUploadBackend
 class AjaxUploadBackend(LocalUploadBackend):
-    UPLOAD_DIR = 'ajax_upload_worktables'
+    UPLOAD_DIR = 'ajax_uploads'
 
 
 from ajaxuploader.views import AjaxFileUploader

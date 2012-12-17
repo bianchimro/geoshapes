@@ -1,0 +1,21 @@
+{% extends "website/base.html" %}
+{% load url from future %}
+{% block content %}
+
+<div class="container">
+
+    <div class="row">
+        <div class="span12">
+        <div id="sources-list">
+            {% include "website/sources_list.html" %}
+        </div>
+        
+        <div>
+            {% include "website/add_source.html" %}
+        </div>
+        
+    </div>
+</div>
+
+
+{% endblock %}

@@ -47,14 +47,21 @@ def get_bool(value):
         raise ValueError("Could not convert to boolean %s", value)
     return out
     
-    
 
 
-BASE_TYPES = { 'string' : {'checker': dummy, 'converter': dummy },
-               'integer' : { 'checker': int, 'overrides':['float', 'string'], 'converter': dummy },
-               'float' : { 'checker': float, 'overrides':['string'], 'converter': dummy },
-               'date' : { 'checker': date, 'overrides':['string'], 'converter': date2sql },
-               'boolean' : { 'checker': get_bool, 'overrides':['string'], 'converter': int },
+def is_string_200(value):
+    value = str(value)
+    if len(value) > 200:
+        raise ValueError("Could not convert string (less than 200 chars) %s", value)
+
+
+
+BASE_TYPES = { 'text' : {'checker': dummy, 'converter': dummy },
+               'string' : { 'checker': is_string_200, 'overrides':['text'], 'converter': dummy },
+               'integer' : { 'checker': int, 'overrides':['float', 'text', 'string'], 'converter': dummy },
+               'float' : { 'checker': float, 'overrides':['text', 'string'], 'converter': dummy },
+               'date' : { 'checker': date, 'overrides':['text', 'string'], 'converter': date2sql },
+               #'boolean' : { 'checker': get_bool, 'overrides':['string'], 'converter': int },
              }
 
 

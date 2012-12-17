@@ -43,24 +43,24 @@ def index(request):
         {},
         context_instance = RequestContext(request))
 
-def csvsources(request):
+def sources(request):
     
-    sources = CsvSource.objects.all()
-    return render_to_response('website/csvsources.html', 
+    sources = Source.objects_resolved.select_subclasses().all()
+    return render_to_response('website/sources.html', 
         { 'sources' : sources },
         context_instance = RequestContext(request))
 
 
-def csvsource(request, source_id):
+def source(request, source_id):
     
-    source = CsvSource.objects.get(pk=int(source_id))
+    source = Source.objects_resolved.select_subclasses().select_related().get(pk=int(source_id))
     descriptors = source.descriptor.all()
     #load_data_url = reverse('website.views.load_data_ajax', args=(source.id,))
     
     allowed_types = json.dumps(DESCRIPTORS_TYPES_MAP.keys())
     allowed_names = json.dumps(source.get_fields())
     
-    return render_to_response('website/csvsource.html', 
+    return render_to_response('website/source.html', 
         {   'source' : source, 
             'descriptors' : descriptors, 
         },
@@ -72,7 +72,7 @@ def descriptor(request, descriptor_id):
     descriptor = DatasetDescriptor.objects.get(id=int(descriptor_id))
     descriptor_resource_url = reverse("website.views.descriptor_ajax", args=(descriptor_id,))
     
-    source = CsvSource.objects.get(id=descriptor.source.id)
+    source = Source.objects_resolved.select_subclasses().get(id=descriptor.source.id)
 
     descriptor_json = json.dumps(instance_dict(descriptor, recursive=True),cls=DjangoJSONEncoder)
     load_data_url = reverse('website.views.load_data_ajax', args=(descriptor.id,))
@@ -94,40 +94,55 @@ def descriptor(request, descriptor_id):
 
 
 #todo: make a class, move elsewhere
-from shapesengine.csv_inspector.csvinspector import CSVInspector
+from shapesengine.inspectors.csvinspector import CSVInspector
+from shapesengine.inspectors.shapesinspector import ShapesInspector
 
-def generate_fields_for_descriptor(source, descriptor):
+def generate_fields_for_csv_descriptor(source, descriptor):
     for d in descriptor.items.all():
         d.delete()
         
     inspector = CSVInspector(source.csv.path)
     inspector.analyze()
-    for field_name in inspector.meta:
-        field = inspector.meta[field_name]
-        print field_name
-        print field
+    generate_fields_from_meta(descriptor, inspector.meta)
+
+def generate_fields_for_shape_descriptor(source, descriptor):
+    for d in descriptor.items.all():
+        d.delete()
+        
+    inspector = ShapesInspector(source.csv.path)
+    inspector.analyze()
+    generate_fields_from_meta(descriptor, inspector.meta)
+
+
+def generate_fields_from_meta(descriptor, meta):
+    for field_name in meta:
+        field = meta[field_name]
         item = DatasetDescriptorItem(descriptor=descriptor, name=field_name, type=field['type'])
-        print item
         item.save()
-    
-    """    
-    fields = source.get_fields()
-    for field in fields:
-        item = DatasetDescriptorItem(descriptor=descriptor, name=field, type='text')
-        item.save()
-    """    
 
 
-def add_source_descriptor(request, source_id):
+
+
+def add_source_descriptor_csv(request, source_id):
 
     #todo: SHOULD BE A POST!
     source = CsvSource.objects.get(pk=int(source_id))
     descriptor = DatasetDescriptor(source=source)
     descriptor.save()
     
-    generate_fields_for_descriptor(source, descriptor)
+    generate_fields_for_csv_descriptor(source, descriptor)
+    
+    return HttpResponseRedirect(reverse("website.views.descriptor", args=(descriptor.id,)))
     
     
+def add_source_descriptor_shape(request, source_id):
+
+    #todo: SHOULD BE A POST!
+    source = ShapeSource.objects.get(pk=int(source_id))
+    descriptor = DatasetDescriptor(source=source)
+    descriptor.save()
+    
+    generate_fields_for_shape_descriptor(source, descriptor)
     
     return HttpResponseRedirect(reverse("website.views.descriptor", args=(descriptor.id,)))
 
@@ -263,3 +278,62 @@ def dataset_table_view(request, descriptor_id):
         },
     context_instance = RequestContext(request))
 
+
+
+
+
+def load_source_data_ajax(request, source_id):
+
+    #todo: SHOULD BE A POST!
+    source = Source.objects_resolved.select_subclasses().get(pk=int(source_id))
+    descriptor = DatasetDescriptor(source=source)
+    descriptor.save()
+    
+    generate_fields_for_csv_descriptor(source, descriptor)
+
+    descriptor.load_data()
+    
+    out = {}
+    out['descriptor'] = instance_dict(descriptor, recursive=True, related_names=['items'], properties=['metadata'])
+    
+    jsonOutput = json.dumps(out, cls=DjangoJSONEncoder)
+    return HttpResponse(jsonOutput,  mimetype="application/json")
+
+
+
+
+
+
+#@login_required
+def add_source_ajax(request):
+    user = request.user
+    #TODO: check if user can write    
+    
+    
+    if request.method == 'POST':
+        print "1"
+       
+        print "2"
+        name = request.POST['name']
+        filename = request.POST['filename']
+        
+        full_path = os.path.join(settings.MEDIA_ROOT, 'ajax_uploads', filename)
+        part_path = os.path.join('ajax_uploads', filename)
+        
+        source_instance = CsvSource(name=name)
+        source_instance.csv.name = part_path
+        source_instance.save()
+        
+        
+        base_render_context = {}
+        """
+        rendered = render_to_string('worktables/attachments_list.html', base_render_context, context_instance=RequestContext(request))
+        """
+        
+        source_dict = instance_dict(source_instance)
+        source_url = reverse("website.views.source", args=(source_instance.id,))
+        out = { 'source' : source_dict, 'source_url' : source_url }
+        
+        jsonOutput = json.dumps(out, cls=DjangoJSONEncoder)
+        return HttpResponse(jsonOutput,  mimetype="application/json")
+        

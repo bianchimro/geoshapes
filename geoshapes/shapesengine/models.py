@@ -1,6 +1,7 @@
 import uuid
 import json
 import csv
+import os
 
 from django.core.exceptions import ValidationError
 
@@ -24,6 +25,10 @@ from model_utils.managers import InheritanceManager
 from shapesengine.dynamic_models import get_dataset_model
 from shapesengine.mappings import *
 #from shapesengine import signals
+
+from shapesengine.inspectors.shapesinspector import ShapesInspector
+from shapesengine.inspectors.csvinspector import CSVInspector
+#from shapesengine.inspectors.helpers import clean_field_name
 
 
 DEFAULT_APP_NAME = 'shapesengine'
@@ -128,19 +133,89 @@ class DyField(models.Model):
 
 class Source(models.Model):
 
-    #TODO: add this field
-    #source_class = models.Charfield(max_lenght=200)
+    name = models.CharField(max_length=200, null=True, blank=True)
+    source_class = models.CharField(max_length=200, null=True, blank=True, editable=False)
     objects = models.Manager()
     objects_resolved = InheritanceManager()
+    
+    @property
+    def default_name(self):
+        return None
+        
+    @property
+    def has_descriptors(self):
+        return bool(self.descriptors)
+
+    @property
+    def first_descriptor(self):
+        if self.descriptor:
+            x = self.descriptor.all()
+            try:
+                return x[0]
+            except:
+                return None
+        
+
+    @property
+    def has_descriptor_with_table(self):
+        print "aaa"
+        desc = self.first_descriptor
+        print desc
+        if not desc:
+            return False
+        return desc.has_dymodel_with_table
+    
+    
+    def save(self, *args, **kwargs):
+        
+        self.source_class = self.__class__.__name__
+        
+        if not self.name:
+            default_name = self.default_name
+            if default_name:
+                self.name = self.default_name
+        
+        return super(Source, self).save(*args, **kwargs)
 
 
-
+#TODO: use inspector here!
 class CsvSource(Source):
     
     csv = models.FileField(upload_to='csv')
+
+    source_type = "csv"
+    source_type_label = "Csv file"
     
+    _inspector_meta = None
+    _csv_inspector = None
+
+    @property
+    def default_name(self):
+        return os.path.split(self.csv.name)[-1]
+
+    @property
+    def inspector(self):
+        if self._csv_inspector:
+            return self._csv_inspector
+        self._csv_inspector = CSVInspector(self.csv.name) 
+        return self._csv_inspector
     
+    @property
+    def inspectormeta(self):
+        if self._inspector_meta:
+            return self._inspector_meta
+        
+        self.inspector.analyze()
+        self._inspector_meta = self.inspector.meta
+        return self._inspector_meta
+    
+        
     def get_fields(self):
+        return self.inspectormeta.keys()
+        
+    """    
+    def get_fields(self):
+    
         f = open(self.csv.path)
         dialect = csv.Sniffer().sniff(f.read(1024))
         f.seek(0)
@@ -148,8 +223,12 @@ class CsvSource(Source):
         fieldnames = reader.fieldnames
         f.close()
         return fieldnames
-        
-        
+    """
+    
+    def get_data(self):
+        return self.inspector.getDataAsDict()
+         
+    """    
     def get_data(self):
         data = []
         f = open(self.csv.path)
@@ -164,15 +243,51 @@ class CsvSource(Source):
             data.append(xline)
         f.close()
         return data
-        
+    """    
     
     def save(self, *args, **kwargs):
     
         #self.source_class = self.__class__.__name__
         return super(CsvSource, self).save(*args, **kwargs)
         
+        
     def __unicode__(self):
         return u"%s" % self.csv.path
+        
+        
+"""        
+class ShapeSource(Source):
+    
+    source_type = "shp"
+    source_type_label = "Shapefile"
+    
+    #TODO: move to FilePathField
+    shape = models.CharField(max_length=200)
+    
+    _inspector_meta = None
+    _shapes_inspector = None
+    
+    @property
+    def default_name(self):
+        return os.path.split(self.shape.path)[-1]
+    
+    @property
+    def inspector(self):
+        if self._shapes_inspector:
+            return self._shapes_inspector
+        self._shapes_inspector = ShapesInspector(self.shape.path) 
+        return self._shapes_inspecto
+    
+    @property
+    def meta(self):
+        if self._inspector_meta:
+            return self._inspector_meta
+            
+        self.inspector.analyze()
+        self._inspector_meta = self.inspector.meta
+        return self._inspector_meta
+"""    
+    
 
     
     
@@ -187,6 +302,15 @@ class DatasetDescriptor(models.Model):
     @property
     def data_url(self):
         return 1
+        
+    @property    
+    def has_dymodel(self):
+        return bool(self.dymodel)
+
+    @property
+    def has_dymodel_with_table(self):
+        return bool(self.dymodel) and self.dymodel.has_table
+    
         
     @property
     def metadata(self):

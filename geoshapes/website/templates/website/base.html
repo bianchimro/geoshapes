@@ -21,6 +21,7 @@
         <link rel="stylesheet" href="{{ STATIC_URL}}website/css/main.css">
 
         <script src="{{ STATIC_URL}}website/js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
+        <script src="{{ STATIC_URL}}website/js/vendor/jquery-1.8.3.min.js"></script>
         
         {% block extra_head %}
         {% endblock %}
@@ -54,14 +55,15 @@
 
 
 
-        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+        <!--<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
 
         <script>window.jQuery || document.write('<script src="{{ STATIC_URL}}website/js/vendor/jquery-1.8.3.min.js"><\/script>')</script>
-
-
+        -->
         <script src="{{ STATIC_URL}}website/js/vendor/bootstrap.min.js"></script>
         <script src="{{ STATIC_URL}}website/js/vendor/knockout-2.2.0.js"></script>
         <script src="{{ STATIC_URL}}website/js/vendor/knockout.mapping-latest.js"></script>
+        <script src="{{ STATIC_URL }}ajaxuploader/fineuploader/js/fineuploader-3.0.min.js" ></script>
+        <link href="{{ STATIC_URL }}ajaxuploader/fineuploader/css/fineuploader.css" media="screen" rel="stylesheet" type="text/css" />
         
         <script src="{{ STATIC_URL}}website/js/main.js"></script>
         <!--

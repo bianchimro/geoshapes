@@ -1,3 +1,5 @@
+from django.template.defaultfilters import slugify
+
 def dummy(value):
     return value
 
@@ -26,5 +28,8 @@ def escapeSQLValue(value):
     return out
     
 def sanitize(value):
-    return value.lstrip().rstrip().replace(" ", "_").replace(".", "_")
+    #return value.lstrip().rstrip().replace(" ", "_").replace(".", "_")
+    return slugify(value).replace("-", "_")
+
+    
     

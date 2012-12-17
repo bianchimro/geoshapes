@@ -16,7 +16,7 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
     
     
-    url(r'^shapesengine/', include('website.urls')),
+    url(r'^shapesengine/', include('shapesengine.urls')),
     url(r'', include('website.urls')),
     
     

@@ -1,4 +1,4 @@
-
+import json
     
 from django.db.models.fields.related import ForeignKey    
 def instance_dict(instance, key_format=None, recursive=False, related_names=[], properties=[]):
@@ -12,12 +12,17 @@ def instance_dict(instance, key_format=None, recursive=False, related_names=[], 
     for field in instance._meta.fields:
         attr = field.name
         value = getattr(instance, attr)
-        if value is not None and isinstance(field, ForeignKey):
-            if not recursive:
-                value = value._get_pk_val()
-            else:
-                value = instance_dict(value)
-        d[key(attr)] = value
+        try:
+            if value is not None and isinstance(field, ForeignKey):
+                if not recursive:
+                    value = value._get_pk_val()
+                else:
+                    value = instance_dict(value)
+            json_val = json.dumps(value)
+            d[key(attr)] = value
+        except Exception,e:
+            print e
+            pass
     
     for field in instance._meta.many_to_many:
         if not recursive:

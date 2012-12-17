@@ -5,10 +5,12 @@ urlpatterns = patterns('website.views',
 
 
 
-    url(r'^csvsources/$', 'csvsources'),
-    url(r'^csvsource/(?P<source_id>\d+)/$', 'csvsource', name="csvsource"),
+    url(r'^sources/$', 'sources'),
+    url(r'^add_source_ajax/$', 'add_source_ajax'),    
+    url(r'^source/(?P<source_id>\d+)/$', 'source', name="source"),
+    url(r'^load_source_data_ajax/(?P<source_id>\d+)/$', 'load_source_data_ajax', name="load_source_data_ajax"),
     url(r'^descriptor/(?P<descriptor_id>\d+)/$', 'descriptor', name="descriptor"),
-    url(r'^add_source_descriptor/(?P<source_id>\d+)/$', 'add_source_descriptor', name="add_source_descriptor"),
+    url(r'^add_source_descriptor_csv/(?P<source_id>\d+)/$', 'add_source_descriptor_csv', name="add_source_descriptor_csv"),
     url(r'^descriptor_ajax/(?P<descriptor_id>\d+)/$', 'descriptor_ajax', name="descriptor_ajax"),
 
     url(r'^dataset_data_ajax/(?P<descriptor_id>\d+)/$', 'dataset_data_ajax', name="dataset_data_ajax"),

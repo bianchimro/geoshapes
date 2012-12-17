@@ -1,0 +1,17 @@
+{% load url from future %}
+
+<h2>Sources</h2>
+<table class="table">
+    <tr>
+        <th>Name</th>
+        <th>Path</th>
+        <th>View</th>
+    </tr>
+    {% for source in sources %}
+    <tr>
+        <td>{{ source.name }}</td>
+        <td>{{ source.csv.path }}</td>
+        <td><a class="" href="{% url "website.views.source" source.id %}">view</a></td>
+    </tr>
+    {% endfor %}
+</table>

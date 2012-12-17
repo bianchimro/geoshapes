@@ -8,7 +8,8 @@
     <div class="row">
         <div class="span12">
         <h2>Descriptor</h2>
-        {{ descriptor.name }}
+        {{ descriptor.source.name }}  <a class="" href="{% url "website.views.source" descriptor.source.id %}">view source</a> 
+        
         </div>
         
         <div class="span12" id="descriptor-container">
@@ -38,8 +39,8 @@
         </div>
         </form>
         <button class="btn btn-danger" data-bind="click: save">Save description</button>
-        <button class="btn btn-danger" data-bind="click: loadData">Load Data</button>
-        <button class="btn btn-danger" data-bind="click: getRows">Load Records</button>
+        <button class="btn btn-danger" data-bind="click: loadData">Reload data</button>
+        <button class="btn btn-danger" data-bind="click: getRows">Show records</button>
         <a href="{% url "website.views.dataset_table_view" descriptor.id %}">View as table</a>
         
         <div id="rows-container" data-bind="if: rows()">
@@ -180,7 +181,7 @@
                         console.log("r", response);
                         if(response.id){
                             self.deserialize(response);
-                            ajaxutils.alertMessage("ww", "alert-success");
+                            ajaxutils.alertMessage("Descriptor loaded", "alert-success");
                         }
                     }
                 
@@ -198,7 +199,7 @@
                     url : load_data_url,
                     success : function(response){
                         console.log("r", response);
-                        ajaxutils.alertMessage("data loaded!", "alert-success");
+                        ajaxutils.alertMessage("Tables recreated!", "alert-success");
                     }
                 
                 });

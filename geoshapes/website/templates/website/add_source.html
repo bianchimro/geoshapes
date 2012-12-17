@@ -1,0 +1,157 @@
+{% load url from future %}
+<button class="btn btn-danger" onclick="$('#source-add-form').modal('show');">Add source</button>
+
+<div id="source-add-form" class="modal fade hide">
+    <div class="modal-header">
+        <a href="#" class="close" data-bind="click: reset">×</a>
+        <h3>Add source</h3>            
+    </div>
+    <div class="modal-body">
+        <form>
+            <label>Name</label>
+            <input type="text" data-bind="value:name"/>
+            <label>File</label>
+            <div id="file-uploader">       
+            </div>
+       </form>
+
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-danger" id="save-document" data-bind="click: sumbitForm">Salva</button>
+        <button class="btn" id="cancel-add-document" data-bind="click: reset">Annulla</button>
+    </div>
+</div>
+
+
+
+
+
+<script> 
+    $(function(){
+            
+            var source_post_url = '{% url "website.views.add_source_ajax" %}';
+            var listSelector = '{{ list_selector|default:"attachments-list"}}';
+            {% comment %}
+            /*
+            
+            var generic_attachment_post_url = '{% url "worktables.views.generic_attachment_ajax" %}';
+            var attachment_target_model = '{{ attachment_target_model }}';
+            var attachment_target_id = '{{ attachment_target_id }}';
+            
+            var buttonSelector = '{{ attachment_button_class|default:"attached-document-delete"}}';
+            
+            listSelector = "#"+listSelector;
+            */
+            {% endcomment %}
+            
+            // knockout form model.
+            var FormModel = function(){
+    
+                var self=this;
+                self.name = ko.observable('');
+                self.file = ko.observable('');
+                
+                //override uploader callback            
+                self.onUploadComplete = function(id, fileName, responseJSON){
+                    //the file is there ... let's send the call to create a model server side
+                    self.file(responseJSON.filename);
+                    console.log("upload complete", id, fileName,responseJSON);
+                    //#TODO:validate file
+                    self.createModels();
+                    
+                };
+                
+                
+                self.reset = function(){
+                    //self.serverErrors([]);
+                    self.name('');
+                    uploader.clearStoredFiles();
+                    $('#source-add-form').modal('hide');
+                
+                }
+                
+                self.createModels = function(){
+                    var data = {
+                        name : self.name(),
+                        filename : self.file()
+                    };
+                    
+                    $.ajax({
+                    
+                        url : source_post_url,
+                        type : 'POST',
+                        dataType : 'json',
+                        data : data,
+                        success : function(resp){
+                            console.log("resp", resp);
+                            //self.updateDom($(resp.rendered));
+                            self.reset();
+                            window.location = resp.source_url;
+                        }
+                    });
+                
+                };
+                
+                
+                self.updateDom = function(html){
+                    $(listSelector).html(html);
+                    var xo = xo || {};
+                    var fname = listSelector+"__deleteAttachments__"+buttonSelector;
+                    try{xo[fname]();} 
+                    catch(err){console.log("err". err);}
+                    
+                };
+                
+                
+                self.sumbitForm = function(){
+                    
+                        self.sendFiles();
+                   
+                };
+                
+                self.sendFiles = function(){
+                    uploader.uploadStoredFiles();
+                };
+                
+                
+                //ko.validatedObservable(self);
+                
+                
+            };
+            
+            //instantiating form model
+            var fm = new FormModel();
+            
+            
+            //fineuploader instance
+            var uploader = new qq.FineUploader({
+                
+                element: $('#file-uploader')[0],
+                multiple: false,
+                request : {
+                    endpoint : '{% url "shapesengine.views.import_uploader" %}',
+                    customHeaders: {
+                        'X-CSRFToken' : '{{ csrf_token }}'
+                    }
+                },
+                autoUpload: false,
+                text: {
+                  uploadButton: '<i class="icon-plus icon-white"></i>Seleziona file'
+                },
+                
+                //passing callback to INSTACED form model
+                callbacks : {
+                    onComplete : fm.onUploadComplete
+                }
+                
+                
+            });
+
+
+            //binding form model
+            ko.applyBindings(fm, document.getElementById("attachments-add-form"));
+            
+            
+            
+    });
+</script> 

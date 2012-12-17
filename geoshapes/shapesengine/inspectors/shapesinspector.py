@@ -1,53 +1,137 @@
 import csv
 import copy
+from django.contrib.gis.gdal import DataSource
+from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.gis.gdal import SpatialReference, CoordTransform
+from django.contrib.gis import geos
 
 from helpers import *    
 from datatypes import BASE_TYPES, SQLITE_TYPES
 
 
-class CSVInspector(object):
+TYPES_MAPPIG  = { 'OFTInteger' : 'integer',
+                  'OFTString' : 'string',
+                  'OFTReal' : 'float'
+    }
+
+class ShapesInspector(object):
 
     def __init__(self, filename, types= BASE_TYPES):
     
         self.filename = filename
         self.types = types
-        self.dialect = None
         self.names=[]
         self.meta={}
-        
-        
-    def getDialect(self):
-        with open(self.filename, 'rb') as csvfile:
-            self.dialect = csv.Sniffer().sniff(csvfile.read(1024))
             
-    
-    def explainDialect(self):
-        
-        if not self.dialect:
-            self.getDialect()
-            
-        print "delimiter:", self.dialect.delimiter
-        print "quotechar:", self.dialect.quotechar
-    
+
+    def getLayer(self):
+        ds = DataSource(self.filename)
+        layer = ds[0]
+        return layer
 
 
     def analyze(self):
+        
+        tempMeta = []
+        layer = self.getLayer()
 
-        if not self.dialect:
-            self.getDialect()
-    
-        with open(self.filename, 'rb') as csvfile:
-            reader = csv.reader(csvfile, self.dialect)
-            #assuming header
-            firstline = reader.next()
-            self.names = [sanitize(x) for x in firstline]
-            tempMeta = [{'fieldName': x, 'candidates' : copy.copy(self.types), 'stats' : {} } for x in self.names]
+        geometry_type = layer.geom_type.name
+        srs = layer.srs
+        fields = layer.fields
+        types = layer.field_types
+        
+        for i, f in enumerate(fields):
+            self.names.append(f)
+            t = types[i]
+            name = t.__name__
+            es_type = TYPES_MAPPIG[name]
+            tempMetaItem = {'fieldName': f, 'candidates' : copy.copy(self.types), 'stats' : {} }
+            tempMeta.append(tempMetaItem)
             
-            for row in reader:
-                self.checkRow(row, tempMeta)
+
+        data = self.readData(layer, self.names)
+        for row in data:
+            self.checkRow(row, tempMeta)
                 
-            self.checkOverrides(tempMeta)
-            self.meta = self.convertMeta(tempMeta)
+        self.checkOverrides(tempMeta)
+        self.meta = self.convertMeta(tempMeta)
+        self.meta['geometry'] = {'type': geometry_type }
+        
+        
+    
+    
+    def get_feature_properties(self, feature):
+        out = {}
+
+        for field in feature.fields:
+            out[field] = feature.get(field)
+        
+        return out
+    
+    
+    def fix_geometry_type(self, geom, source_srid):
+        """
+        Convert polygons to multipolygons so all features are homogenous in the database.
+        """
+        
+        
+        geometry = GEOSGeometry(geom.wkt, srid=source_srid)
+        
+        
+        if(source_srid != 4326):
+            spatref_source = SpatialReference(source_srid)
+            spatref_target = SpatialReference('WGS84')
+            trans = CoordTransform(spatref_source, spatref_target)
+            geometry.transform(trans)
+        
+        
+        if geom.__class__.__name__ == 'Polygon':
+            g = geos.MultiPolygon(geometry)
+            return g
+        else:
+            return geometry
+    
+    
+    def readData(self, layer, names):
+
+        data = []
+        for i, feature in enumerate(layer):
+            properties = self.get_feature_properties(feature)
+            #data.append(properties)
+            item = []
+            for n in names:
+                item.append(properties[n])
+            data.append(item)
+        
+        return data
+        
+    def getDataAsDict(self, layer=None,source_srid_declared='', simplify_tolerance=0):
+
+        data = []
+
+        if layer is None:
+            layer = self.getLayer()
+        
+        try:
+            layer.srs.identify_epsg()
+            source_srid = layer.srs.srid
+        except:
+            if source_srid_declared:
+                source_srid = int(source_srid_declared)
+            else:
+                raise
+                
+        
+        for i, feature in enumerate(layer):
+            properties = self.get_feature_properties(feature)
+            geometry = feature.geom            
+            #geometry = self.fix_geometry_type(geometry, source_srid)
+            properties['geometry'] = geometry.wkt
+
+            data.append(properties)
+        
+        
+        return data
             
             
     def buildInserts(self, tablename):
@@ -106,8 +190,7 @@ class CSVInspector(object):
     
                 
     def checkRow(self, row, tempMeta):
-        for i, xx in enumerate(row):
-            x = xx.lstrip().rstrip()
+        for i, x in enumerate(row):
             meta = tempMeta[i]
             toRemove = []
             candidates = meta['candidates']
@@ -125,7 +208,7 @@ class CSVInspector(object):
             for r in toRemove: 
                 del candidates[r]
             
-            l = len(x)    
+            l = len(str(x))    
             if 'maxlenitem' not in meta['stats']:
                 meta['stats']['maxlenitem'] = x
                 meta['stats']['maxlen'] = l
@@ -192,15 +275,14 @@ class CSVInspector(object):
 if __name__ == '__main__':
     import sys
     fn = sys.argv[1]
-    inspector = CSVInspector(fn, types=SQLITE_TYPES)
+    inspector = ShapesInspector(fn, types=BASE_TYPES)
     inspector.analyze()
-    if '--analyze' in sys.argv:
-        print inspector.meta
+    print inspector.meta
     
-    if '--create' in sys.argv:
-        inspector.createTable(tablename='test1')
-    if '--insert' in sys.argv:
-        inspector.insert(tablename='test1')
+    layer = inspector.getLayer()
+    data = inspector.getDataAsDict(layer)
+    print data
+    
         
 
         
