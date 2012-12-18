@@ -25,11 +25,12 @@ class CSVInspector(BaseInspector):
         if self._dialect:
             return self._dialect
         self._dialect = self.getDialect()
+        return self._dialect
         
     
     def getDialect(self):
         with open(self.filename, 'rb') as csvfile:
-            dialect = csv.Sniffer().sniff(csvfile.read(1024))
+            dialect = csv.Sniffer().sniff(csvfile.read(2048))
             return dialect
             
     
@@ -46,6 +47,7 @@ class CSVInspector(BaseInspector):
             reader = csv.reader(csvfile, self.dialect)
             #assuming header
             firstline = reader.next()
+            print "x", firstline
             self.names = [sanitize(x) for x in firstline]
             tempMeta = [{'fieldName': x, 'candidates' : copy.copy(self.types), 'stats' : {} } for x in self.names]
             
