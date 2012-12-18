@@ -97,7 +97,7 @@ class BaseInspector(object):
             for r in toRemove: 
                 del candidates[r]
             
-            l = len(x)    
+            l = len(str(x))    
             if 'maxlenitem' not in meta['stats']:
                 meta['stats']['maxlenitem'] = x
                 meta['stats']['maxlen'] = l
