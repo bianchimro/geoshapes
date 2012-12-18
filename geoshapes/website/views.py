@@ -28,11 +28,11 @@ from django.core.files import File
 
 from django.db.models.loading import get_model
 
-from shapesengine.utils import instance_dict
+from shapesengine.utils import instance_dict, AjaxResponse
 
 from shapesengine.models import *
 
-#TODO: handle errors in ajax responses !!!
+
 #TODO: add data preview
 
 
@@ -154,11 +154,19 @@ def add_source_descriptor_shape(request, source_id):
 #TODO: this has some issues when descriptor does not exist
 def descriptor_ajax(request, descriptor_id=None):
 
-    descriptor = DatasetDescriptor.objects.get(pk=int(descriptor_id))
+    response = AjaxResponse()
+    
+    #post method
     if request.method == 'POST':
         if request.POST['id']:
             id_descriptor = int(request.POST['id'])
-            descriptor = DatasetDescriptor.objects.get(pk = id_descriptor)
+            try:
+                descriptor = DatasetDescriptor.objects.get(pk = id_descriptor)
+            except Exception,e:
+                response.error = str(e)
+                response.status = 404
+                return response.as_http_response()
+                
         else:
             descriptor = DatasetDescriptor()
             descriptor.save()
@@ -185,41 +193,60 @@ def descriptor_ajax(request, descriptor_id=None):
                 descr.type= descriptor_item['type']
                 descr.save()
         
-        
-        out = instance_dict(descriptor, recursive=True)
-    
+        descriptor_dict = instance_dict(descriptor, recursive=True)
+        response.result = descriptor_dict
+
+    #get method
     else:
         try:
             descriptor  = DatasetDescriptor.objects.get(pk=descriptor_id)
-        except:
-            raise Http404
-                
-        out = instance_dict(descriptor, recursive=True, related_names=['items'], properties=['dirty', 'data_url'])
-    #todo: handle errors
-    jsonOutput = json.dumps(out, cls=DjangoJSONEncoder)
-    return HttpResponse(jsonOutput,  mimetype="application/json")
+            descriptor_dict = instance_dict(descriptor, recursive=True, related_names=['items'], properties=['dirty', 'data_url'])
+            response.result = descriptor_dict
+        except Exception, e:
+            response.error = str(e)
+            response.status = 404
+
+    
+    return response.as_http_response()
     
 
 def load_data_ajax(request, descriptor_id):
     
-    descriptor = DatasetDescriptor.objects.get(pk=int(descriptor_id))
+    response = AjaxResponse()
+    try:
+        descriptor = DatasetDescriptor.objects.get(pk=int(descriptor_id))
+    except Exception, e:
+        response.status = 404
+        response.error = str(e)
+        return response.as_http_response()
+        
         
     out = {}
     
     if request.method == 'POST':
-        descriptor.load_data()
-        
-    out = instance_dict(descriptor, recursive=True, properties=['metadata'])
-    
-    #todo: return errors or some response ...
-    jsonOutput = json.dumps(out, cls=DjangoJSONEncoder)
-    return HttpResponse(jsonOutput,  mimetype="application/json")
+        try:
+            descriptor.load_data()
+            descriptor_dict = instance_dict(descriptor, recursive=True, properties=['metadata'])
+            response.result = descriptor_dict
+        except Exception, e:
+            response.error = str(e)
+            response.status = 500
+
+    return response.as_http_response()
 
 
 
 def dataset_data_ajax(request, descriptor_id):
     
-    descriptor  = DatasetDescriptor.objects.select_related().get(id=int(descriptor_id))
+    response = AjaxResponse()
+    
+    try:
+        descriptor  = DatasetDescriptor.objects.select_related().get(id=int(descriptor_id))
+    except Exception, e:
+        response.status = 404
+        response.error = str(e)
+        return response.as_http_response()
+    
     datamodel = descriptor.dymodel
 
     out = {}
@@ -242,11 +269,12 @@ def dataset_data_ajax(request, descriptor_id):
         out_objs.append(instance_dict(o, recursive=True))
         
     
+    out = {}
     out['rows'] = out_objs
     out['descriptor'] = instance_dict(descriptor, recursive=True, related_names=['items'], properties=['metadata'])
+    response.result = out
     
-    jsonOutput = json.dumps(out, cls=DjangoJSONEncoder)
-    return HttpResponse(jsonOutput,  mimetype="application/json")    
+    return response.as_http_response()
     
     
 def dataset_table_view(request, descriptor_id):
@@ -287,90 +315,108 @@ def dataset_table_view(request, descriptor_id):
 
 def load_source_data_ajax(request, source_id):
 
-    base_source = Source.objects.get(pk=int(source_id))
-    source = base_source.get_subclass()
+    response = AjaxResponse()
+    try:
+        base_source = Source.objects.get(pk=int(source_id))
+        source = base_source.get_subclass()
     
-    descriptor = DatasetDescriptor(source=source)
-    descriptor.save()
     
-    generate_fields_for_csv_descriptor(source, descriptor)
-
-    descriptor.load_data()
+        descriptor = DatasetDescriptor(source=source)
+        descriptor.save()
     
-    out = {}
-    out['descriptor'] = instance_dict(descriptor, recursive=True, related_names=['items'], properties=['metadata'])
+        generate_fields_for_csv_descriptor(source, descriptor)
+
+        descriptor.load_data()
     
-    jsonOutput = json.dumps(out, cls=DjangoJSONEncoder)
-    return HttpResponse(jsonOutput,  mimetype="application/json")
+        out = {}
+        out['descriptor'] = instance_dict(descriptor, recursive=True, related_names=['items'], properties=['metadata'])
+        response.result = out
 
-
-
-
-
+    except Exception, e:
+        response.status = 500
+        response.error = str(e)
+        
+    return response.as_http_response()
 
 #@login_required
 def add_csv_source_ajax(request):
+
+    response = AjaxResponse()
     user = request.user
     #TODO: check if user can write    
     
     if request.method == 'POST':
-        name = request.POST['name']
-        filename = request.POST['filename']
+    
+        try:
+            name = request.POST['name']
+            filename = request.POST['filename']
+            
+            full_path = os.path.join(settings.MEDIA_ROOT, 'ajax_uploads', filename)
+            part_path = os.path.join('ajax_uploads', filename)
+            
+            source_instance = CsvSource(name=name)
+            source_instance.csv.name = part_path
+            source_instance.save()
+            
+            
+            base_render_context = {}
+            """
+            rendered = render_to_string('worktables/attachments_list.html', base_render_context, context_instance=RequestContext(request))
+            """
+            
+            source_dict = instance_dict(source_instance)
+            source_url = reverse("website.views.source", args=(source_instance.id,))
+            out = { 'source' : source_dict, 'source_url' : source_url }
+            response.result = out
+            
+        except Exception, e:
+            response.status = 500
+            response.error = str(e)
         
-        full_path = os.path.join(settings.MEDIA_ROOT, 'ajax_uploads', filename)
-        part_path = os.path.join('ajax_uploads', filename)
         
-        source_instance = CsvSource(name=name)
-        source_instance.csv.name = part_path
-        source_instance.save()
-        
-        
-        base_render_context = {}
-        """
-        rendered = render_to_string('worktables/attachments_list.html', base_render_context, context_instance=RequestContext(request))
-        """
-        
-        source_dict = instance_dict(source_instance)
-        source_url = reverse("website.views.source", args=(source_instance.id,))
-        out = { 'source' : source_dict, 'source_url' : source_url }
-        
-        jsonOutput = json.dumps(out, cls=DjangoJSONEncoder)
-        return HttpResponse(jsonOutput,  mimetype="application/json")
+        return response.as_http_response()
         
 
 def add_shape_source_ajax(request):
+
+    response = AjaxResponse()
     user = request.user
     #TODO: check if user can write    
     
     if request.method == 'POST':
     
-        name = request.POST['name']
-        filename = request.POST['filename']
+        try:
+            name = request.POST['name']
+            filename = request.POST['filename']
+            
+            full_path = os.path.join(settings.MEDIA_ROOT, 'ajax_uploads', filename)
+            part_path = os.path.join('ajax_uploads', filename)
+            
+            #todo: check zip
+            #todo: unzip to DEFAULT_SHAPES_PATH
+            #todo: get new path of main shape
+            new_path = ''
+            
+            source_instance = ShapeSource(name=name)
+            source_instance.shape.path = new_path
+            source_instance.save()
+            
+            
+            base_render_context = {}
+            """
+            rendered = render_to_string('worktables/attachments_list.html', base_render_context, context_instance=RequestContext(request))
+            """
+            
+            source_dict = instance_dict(source_instance)
+            source_url = reverse("website.views.source", args=(source_instance.id,))
+            out = { 'source' : source_dict, 'source_url' : source_url }
+            response.result = out
+            
+        except Exception, e:
+            response.status = 500
+            response.error = str(e)
         
-        full_path = os.path.join(settings.MEDIA_ROOT, 'ajax_uploads', filename)
-        part_path = os.path.join('ajax_uploads', filename)
-        
-        #todo: check zip
-        #todo: unzip to DEFAULT_SHAPES_PATH
-        #todo: get new path of main shape
-        new_path = ''
-        
-        source_instance = ShapeSource(name=name)
-        source_instance.shape.path = new_path
-        source_instance.save()
-        
-        
-        base_render_context = {}
-        """
-        rendered = render_to_string('worktables/attachments_list.html', base_render_context, context_instance=RequestContext(request))
-        """
-        
-        source_dict = instance_dict(source_instance)
-        source_url = reverse("website.views.source", args=(source_instance.id,))
-        out = { 'source' : source_dict, 'source_url' : source_url }
-        
-        jsonOutput = json.dumps(out, cls=DjangoJSONEncoder)
-        return HttpResponse(jsonOutput,  mimetype="application/json")
+    return response.as_http_response()
         
 
 

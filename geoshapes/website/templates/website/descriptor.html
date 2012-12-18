@@ -106,7 +106,6 @@
                 var out = $("<tr></tr>");
                 for(var field in self.metadata()){
                     var item = $("<td></td>");
-                    console.log("f", field);
                     item.text(self.data[field]);
                     out.append(item);
                 }
@@ -165,7 +164,6 @@
                 
                 }
                 data.items = JSON.stringify(items)
-                console.log(data)
                 return data;
             };
             
@@ -178,10 +176,13 @@
                     dataType : 'json',
                     url : descriptor_resource_url,
                     success : function(response){
-                        console.log("r", response);
-                        if(response.id){
-                            self.deserialize(response);
+                        if(response.status == 200){
+                            var result = response.result;
+                            self.deserialize(result);
                             ajaxutils.alertMessage("Descriptor loaded", "alert-success");
+                        }
+                        else{
+                            ajaxutils.alertMessage("Could not load descriptor:" + response.error, "alert-error");
                         }
                     }
                 
@@ -198,8 +199,13 @@
                     dataType : 'json',
                     url : load_data_url,
                     success : function(response){
-                        console.log("r", response);
-                        ajaxutils.alertMessage("Tables recreated!", "alert-success");
+                        if(response.status == 200){
+                            ajaxutils.alertMessage("Tables recreated!", "alert-success");
+                        }
+                        else{
+                            ajaxutils.alertMessage("Error:" + response.error, "alert-error");
+                        }
+
                     }
                 
                 });
@@ -216,12 +222,19 @@
                     dataType : 'json',
                     url : dataset_data_url,
                     success : function(response){
-                        console.log("r", response);
-                        ajaxutils.alertMessage("Rows here!", "alert-success");
-                        if(response.rows){
-                            self.metadata(response.descriptor.metadata);
-                            self.loadRows(response.rows);
+                        if(response.status == 200){
+                            ajaxutils.alertMessage("Rows here!", "alert-success");
+                            var result = response.result;
+                            if(result.rows){
+                                self.metadata(result.descriptor.metadata);
+                                self.loadRows(result.rows);
+                            }
+                            
                         }
+                        else{
+                            ajaxutils.alertMessage("Error:" + response.error, "alert-error");
+                        }
+                    
                     }
                 });            
             };
@@ -259,8 +272,12 @@
                     url : descriptor_resource_url,
                     data: data,
                     success : function(response){
-                        console.log("r", response);
-                        ajaxutils.alertMessage("saved", "alert-success");
+                        if(response.status == 200){
+                            ajaxutils.alertMessage("Saved!", "alert-success");
+                        }
+                        else{
+                            ajaxutils.alertMessage("Error:" + response.error, "alert-error");
+                        }
                     }
                 
                 });

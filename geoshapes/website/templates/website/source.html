@@ -56,8 +56,14 @@
                     type : 'POST',
                     dataType : 'json',
                     success : function(response){
-                        console.log("x", response);
-                        ajaxutils.alertMessage("Data loaded", "alert-success");
+                        if(response.status == 200){
+                                ajaxutils.alertMessage("Data loaded", "alert-success");
+                                window.location = window.location;
+                        
+                        }else{
+                            ajaxutils.alertMessage("Error:" + response.error, "alert-error");
+                        }
+                    
                     }
                 
                 
