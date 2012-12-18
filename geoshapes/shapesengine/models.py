@@ -4,6 +4,7 @@ import csv
 import os
 
 from django.core.exceptions import ValidationError
+from django.conf import settings
 
 from django.db import models
 from django.db.models.loading import cache
@@ -33,6 +34,7 @@ from shapesengine.inspectors.csvinspector import CSVInspector
 
 
 DEFAULT_APP_NAME = 'shapesengine'
+DEFAULT_SHAPES_PATH = os.path.join(settings.MEDIA_ROOT, "shapes_uploads")
 
 
 #TODO: add classes for automatic creation of descriptors
@@ -165,9 +167,7 @@ class Source(models.Model):
 
     @property
     def has_descriptor_with_table(self):
-        print "aaa"
         desc = self.first_descriptor
-        print desc
         if not desc:
             return False
         return desc.has_dymodel_with_table
@@ -269,7 +269,8 @@ class ShapeSource(Source):
     source_type_label = "Shapefile"
     
     #TODO: move to FilePathField
-    shape = models.CharField(max_length=200)
+    #shape = models.CharField(max_length=200)
+    shape = models.FilePathField(path=DEFAULT_SHAPES_PATH, recursive=True, max_length=200)
     
     _inspector_meta = None
     _shapes_inspector = None
@@ -283,7 +284,7 @@ class ShapeSource(Source):
         if self._shapes_inspector:
             return self._shapes_inspector
         self._shapes_inspector = ShapesInspector(self.shape.path) 
-        return self._shapes_inspecto
+        return self._shapes_inspector
     
     @property
     def meta(self):
@@ -293,9 +294,14 @@ class ShapeSource(Source):
         self.inspector.analyze()
         self._inspector_meta = self.inspector.meta
         return self._inspector_meta
-
     
 
+    def get_fields(self):
+        return self.inspectormeta.keys()
+    
+    
+    def get_data(self):
+        return self.inspector.getDataAsDict()
     
     
 class DatasetDescriptor(models.Model):

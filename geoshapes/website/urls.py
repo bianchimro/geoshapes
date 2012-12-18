@@ -6,7 +6,9 @@ urlpatterns = patterns('website.views',
 
 
     url(r'^sources/$', 'sources'),
-    url(r'^add_source_ajax/$', 'add_source_ajax'),    
+    url(r'^add_csv_source_ajax/$', 'add_csv_source_ajax'),
+    url(r'^add_shape_source_ajax/$', 'add_shape_source_ajax'),        
+        
     url(r'^source/(?P<source_id>\d+)/$', 'source', name="source"),
     url(r'^load_source_data_ajax/(?P<source_id>\d+)/$', 'load_source_data_ajax', name="load_source_data_ajax"),
     url(r'^descriptor/(?P<descriptor_id>\d+)/$', 'descriptor', name="descriptor"),

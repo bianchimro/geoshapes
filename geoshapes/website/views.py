@@ -32,9 +32,8 @@ from shapesengine.utils import instance_dict
 
 from shapesengine.models import *
 
-#TODO: handle errors in ajax responses
+#TODO: handle errors in ajax responses !!!
 #TODO: add data preview
-#TODO use source_class
 
 
 def index(request):
@@ -93,7 +92,7 @@ def descriptor(request, descriptor_id):
             'dataset_data_url' : dataset_data_url,
             'descriptor_resource_url' : descriptor_resource_url,
         },
-    context_instance = RequestContext(request))
+        context_instance = RequestContext(request))
 
 
 
@@ -102,12 +101,14 @@ from shapesengine.inspectors.csvinspector import CSVInspector
 from shapesengine.inspectors.shapesinspector import ShapesInspector
 
 def generate_fields_for_csv_descriptor(source, descriptor):
+
     for d in descriptor.items.all():
         d.delete()
         
     inspector = CSVInspector(source.csv.path)
     inspector.analyze()
     generate_fields_from_meta(descriptor, inspector.meta)
+
 
 def generate_fields_for_shape_descriptor(source, descriptor):
     for d in descriptor.items.all():
@@ -123,8 +124,6 @@ def generate_fields_from_meta(descriptor, meta):
         field = meta[field_name]
         item = DatasetDescriptorItem(descriptor=descriptor, name=field_name, type=field['type'])
         item.save()
-
-
 
 
 def add_source_descriptor_csv(request, source_id):
@@ -310,15 +309,11 @@ def load_source_data_ajax(request, source_id):
 
 
 #@login_required
-def add_source_ajax(request):
+def add_csv_source_ajax(request):
     user = request.user
     #TODO: check if user can write    
     
-    
     if request.method == 'POST':
-        print "1"
-       
-        print "2"
         name = request.POST['name']
         filename = request.POST['filename']
         
@@ -342,3 +337,40 @@ def add_source_ajax(request):
         jsonOutput = json.dumps(out, cls=DjangoJSONEncoder)
         return HttpResponse(jsonOutput,  mimetype="application/json")
         
+
+def add_shape_source_ajax(request):
+    user = request.user
+    #TODO: check if user can write    
+    
+    if request.method == 'POST':
+    
+        name = request.POST['name']
+        filename = request.POST['filename']
+        
+        full_path = os.path.join(settings.MEDIA_ROOT, 'ajax_uploads', filename)
+        part_path = os.path.join('ajax_uploads', filename)
+        
+        #todo: check zip
+        #todo: unzip to DEFAULT_SHAPES_PATH
+        #todo: get new path of main shape
+        new_path = ''
+        
+        source_instance = ShapeSource(name=name)
+        source_instance.shape.path = new_path
+        source_instance.save()
+        
+        
+        base_render_context = {}
+        """
+        rendered = render_to_string('worktables/attachments_list.html', base_render_context, context_instance=RequestContext(request))
+        """
+        
+        source_dict = instance_dict(source_instance)
+        source_url = reverse("website.views.source", args=(source_instance.id,))
+        out = { 'source' : source_dict, 'source_url' : source_url }
+        
+        jsonOutput = json.dumps(out, cls=DjangoJSONEncoder)
+        return HttpResponse(jsonOutput,  mimetype="application/json")
+        
+
+
