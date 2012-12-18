@@ -47,7 +47,6 @@ class CSVInspector(BaseInspector):
             reader = csv.reader(csvfile, self.dialect)
             #assuming header
             firstline = reader.next()
-            print "x", firstline
             self.names = [sanitize(x) for x in firstline]
             tempMeta = [{'fieldName': x, 'candidates' : copy.copy(self.types), 'stats' : {} } for x in self.names]
             
