@@ -17,3 +17,5 @@ ajaxutils.alertMessage = function(message, cssClass){
     
 
 };
+
+//#todo: add a modal alert

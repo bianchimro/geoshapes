@@ -9,8 +9,11 @@
 
     <div class="row">
         <div class="span12">
-        <h2>Table</h2>
+        <h2>Dataset</h2>
         <a href="{% url "website.views.descriptor" descriptor.id %}">To descriptor</a>
+        <div style="clear:both">
+           {% include "website/paginator.html" %}
+        </div>
         <table class="table">
         <tr>
             {% for field in meta %}
@@ -19,15 +22,18 @@
             </td>
             {% endfor %}
         </tr>
-        {% for row in rows %}
+        {% for row in paginator_page.object_list %}
         <tr>
           {% for field in meta %}
-         <td>{{ row|lookup:field }}</td>
+         <td>{{ row|get:field }}</td>
         {% endfor %}
         </tr>
         {% endfor %}
         
         </table>
+        <div style="clear:both">
+           {% include "website/paginator.html" %}
+        </div>
         
     </div>
 </div>

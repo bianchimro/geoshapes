@@ -5,7 +5,7 @@ from django.http import HttpResponse
 
 
 
-def instance_dict(instance, key_format=None, recursive=False, related_names=[], properties=[]):
+def instance_dict(instance, key_format=None, recursive=False, related_names=[], properties=[], check_json=True):
     
     """
     Returns a dictionary containing field names and values for the given instance
@@ -85,7 +85,40 @@ class AjaxResponse(object):
     def as_http_response(self):
         return HttpResponse(self.content_json, mimetype="application/json")
         
+        
+
+def cast_or_get_none(fun, value):
+    try:
+        out = fun(value)
+    except:
+        out = None
     
+    return out
 
 
-
+def collect_queryset_rows(queryset, offset=None, limit=None):
+    out_objs = []    
+    
+   
+    offset = cast_or_get_none(int, offset)
+    limit = cast_or_get_none(int, limit)
+    
+    print("i", limit, offset)
+    
+    #basic limit and offset    
+    if limit and offset:
+        for o in queryset[offset:limit]:
+            out_objs.append(instance_dict(o, recursive=True))
+        
+    else:
+        if limit:
+            for o in queryset[:limit]:
+                out_objs.append(instance_dict(o, recursive=True))
+        elif offset:
+            for o in queryset[offset:]:
+                out_objs.append(instance_dict(o, recursive=True))   
+        else:
+            for o in queryset:
+                out_objs.append(instance_dict(o, recursive=True))   
+    
+    return out_objs

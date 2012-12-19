@@ -28,13 +28,19 @@ from django.core.files import File
 
 from django.db.models.loading import get_model
 
-from shapesengine.utils import instance_dict, AjaxResponse
+from shapesengine.utils import instance_dict, collect_queryset_rows, AjaxResponse
+from shapesengine.shapeutils import ShapeChecker
 
 from shapesengine.models import *
+
+from django.core.paginator import Paginator
+from website.pagination import get_page_or_1, get_paginator_page
 
 
 #TODO: add data preview
 
+#TODO: move to settings
+DATASET_OBJECTS_PER_PAGE = 100
 
 def index(request):
     
@@ -96,34 +102,7 @@ def descriptor(request, descriptor_id):
 
 
 
-#todo: make a class, move elsewhere
-from shapesengine.inspectors.csvinspector import CSVInspector
-from shapesengine.inspectors.shapesinspector import ShapesInspector
 
-def generate_fields_for_csv_descriptor(source, descriptor):
-
-    for d in descriptor.items.all():
-        d.delete()
-        
-    inspector = CSVInspector(source.csv.path)
-    inspector.analyze()
-    generate_fields_from_meta(descriptor, inspector.meta)
-
-
-def generate_fields_for_shape_descriptor(source, descriptor):
-    for d in descriptor.items.all():
-        d.delete()
-        
-    inspector = ShapesInspector(source.csv.path)
-    inspector.analyze()
-    generate_fields_from_meta(descriptor, inspector.meta)
-
-
-def generate_fields_from_meta(descriptor, meta):
-    for field_name in meta:
-        field = meta[field_name]
-        item = DatasetDescriptorItem(descriptor=descriptor, name=field_name, type=field['type'])
-        item.save()
 
 
 def add_source_descriptor_csv(request, source_id):
@@ -136,6 +115,7 @@ def add_source_descriptor_csv(request, source_id):
     generate_fields_for_csv_descriptor(source, descriptor)
     
     return HttpResponseRedirect(reverse("website.views.descriptor", args=(descriptor.id,)))
+    
     
     
 def add_source_descriptor_shape(request, source_id):
@@ -208,6 +188,7 @@ def descriptor_ajax(request, descriptor_id=None):
 
     
     return response.as_http_response()
+  
     
 
 def load_data_ajax(request, descriptor_id):
@@ -250,23 +231,12 @@ def dataset_data_ajax(request, descriptor_id):
     datamodel = descriptor.dymodel
 
     out = {}
-    out_objs = []    
+    
     objs = datamodel.Dataset.objects.all()
     
-    limit = getattr(request.GET, 'limit', None)
-    offset = getattr(request.GET, 'limit', None)
-    
-    #basic limit and offset    
-    if limit and offset:
-        objs = objs[int(offset) : int(limit)]
-    else:
-        if limit:
-            objs = objs[:int(limit)]
-        if offset:
-            objs = objs[int(offset):]
-    
-    for o in objs:
-        out_objs.append(instance_dict(o, recursive=True))
+    limit = request.GET.get('limit', None)
+    offset = request.GET.get('offset', None)
+    out_objs = collect_queryset_rows(objs, offset, limit)
         
     
     out = {}
@@ -277,39 +247,25 @@ def dataset_data_ajax(request, descriptor_id):
     return response.as_http_response()
     
     
+    
 def dataset_table_view(request, descriptor_id):
     
     descriptor  = DatasetDescriptor.objects.select_related().get(id=int(descriptor_id))
     datamodel = descriptor.dymodel
-
-    out = {}
-    out_objs = []    
+    
     objs = datamodel.Dataset.objects.all()
     
-    limit = getattr(request.GET, 'limit', None)
-    offset = getattr(request.GET, 'limit', None)
-    
-    #basic limit and offset    
-    if limit and offset:
-        objs = objs[int(offset) : int(limit)]
-    else:
-        if limit:
-            objs = objs[:int(limit)]
-        if offset:
-            objs = objs[int(offset):]
-    
-    for o in objs:
-        out_objs.append(instance_dict(o, recursive=True))
-    
+    paginator = Paginator(objs, DATASET_OBJECTS_PER_PAGE)
+    page = get_page_or_1(request)
+    dataset_page = get_paginator_page(paginator, page)
     
     return render_to_response('website/dataset_table_view.html', 
-        {   'rows' : out_objs, 
+        {   'rows' : objs, 
             'meta' : descriptor.metadata,
-            'descriptor':descriptor
+            'descriptor':descriptor,
+            'paginator_page':dataset_page
         },
-    context_instance = RequestContext(request))
-
-
+        context_instance = RequestContext(request))
 
 
 
@@ -319,12 +275,14 @@ def load_source_data_ajax(request, source_id):
     try:
         base_source = Source.objects.get(pk=int(source_id))
         source = base_source.get_subclass()
-    
+        
+        
     
         descriptor = DatasetDescriptor(source=source)
         descriptor.save()
-    
-        generate_fields_for_csv_descriptor(source, descriptor)
+        
+        source.generate_fields_for_descriptor(descriptor)
+        
 
         descriptor.load_data()
     
@@ -337,6 +295,10 @@ def load_source_data_ajax(request, source_id):
         response.error = str(e)
         
     return response.as_http_response()
+    
+    
+    
+
 
 #@login_required
 def add_csv_source_ajax(request):
@@ -395,12 +357,19 @@ def add_shape_source_ajax(request):
             #todo: check zip
             #todo: unzip to DEFAULT_SHAPES_PATH
             #todo: get new path of main shape
-            new_path = ''
+
+            checker = ShapeChecker()
+            valid, msg = checker.validate(full_path)
+            if not valid:
+                response.status = 500
+                response.error = msg
+                return response.as_http_response()
             
-            source_instance = ShapeSource(name=name)
-            source_instance.shape.path = new_path
+            
+            new_path = checker.handle(full_path)
+            
+            source_instance = ShapeSource(name=name, shape=new_path)
             source_instance.save()
-            
             
             base_render_context = {}
             """

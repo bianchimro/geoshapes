@@ -14,6 +14,8 @@ DESCRIPTORS_TYPES_MAP = {
     'float' : { 'model': 'FloatField', 'args' : (), 'kwargs': { 'null':True, 'blank':True }, 'parser': float},
     
     'date' : { 'model': 'DateField', 'args' : (), 'kwargs': { 'null':True, 'blank':True }, 'parser': date},
+    
+    'Polygon' : { 'model': 'MultiPolygonField', 'args' : (), 'kwargs': { 'null':True, 'blank':True }, 'parser': str},
 
 }
 

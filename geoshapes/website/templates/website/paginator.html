@@ -1,0 +1,73 @@
+<div class="navbar">
+
+<div class="nav-collapse">
+<div class="pagination amat-pagination pull-left">
+  <ul>
+  
+    {% if paginator_page.has_previous %}
+        <li><a href="?page={{ paginator_page.previous_page_number }}">&lt;</a></li>
+    {% endif %}    
+      <li class="active">
+        <a href="#">Page {{ paginator_page.number }} of {{ paginator_page.paginator.num_pages }}</a>
+      </li>
+     {% if paginator_page.has_next %}
+        <li><a href="?page={{ paginator_page.next_page_number }}">&gt;</a></li>
+    {% endif %}  
+  
+  </ul>
+</div>  
+
+{% if paginator_page.paginator.object_list %}
+<div class="pagination amat-pagination pull-right">
+  <ul>
+    
+
+    {% if paginator_page.number > 3 %}
+    <li>
+      <a href="?page=1">1</a>
+    </li>
+    <li class="">
+      <a>...</a>
+    </li>
+    {% endif %}
+
+    {% if paginator_page.number > 2 %}
+    <li>
+      <a href="?page={{ paginator_page.number|add:"-2" }}">{{ paginator_page.number|add:"-2"}}</a>
+    </li>
+    {% endif %}
+    {% if paginator_page.number > 1 %}
+    <li>
+      <a href="?page={{ paginator_page.number|add:"-1" }}">{{ paginator_page.number|add:"-1"}}</a>
+    </li>
+    {% endif %}
+
+    <li class="active">
+      <a href="#">{{ paginator_page.number }}</a>
+    </li>
+
+    {% if paginator_page.paginator.num_pages > paginator_page.number %}
+    <li>
+      <a href="?page={{ paginator_page.number|add:"1" }}">{{ paginator_page.number|add:"1"}}</a>
+    </li>
+    {% endif %}
+    {% if paginator_page.paginator.num_pages > paginator_page.number|add:"1" %}
+    <li>
+      <a href="?page={{ paginator_page.number|add:"2" }}">{{ paginator_page.number|add:"2"}}</a>
+    </li>
+    {% endif %}
+
+    {% if paginator_page.paginator.num_pages > paginator_page.number|add:"2" %}
+    <li class="">
+      <a>...</a>
+    </li>
+    <li>
+      <a href="?page={{paginator_page.paginator.num_pages}}">{{paginator_page.paginator.num_pages}}</a>
+    </li>
+    {% endif %}
+ 
+  </ul>
+</div>
+{% endif %} 
+</div>
+</div>

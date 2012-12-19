@@ -6,7 +6,8 @@ import os
 from django.core.exceptions import ValidationError
 from django.conf import settings
 
-from django.db import models
+#from django.db import models
+from django.contrib.gis.db import models
 from django.db.models.loading import cache
 #from django.db.models.signals import post_save, pre_save, pre_delete, post_delete
 
@@ -42,6 +43,48 @@ DEFAULT_SHAPES_PATH = os.path.join(settings.MEDIA_ROOT, "shapes_uploads")
 
 def generate_hash_string():
     return str(uuid.uuid4).replace("-","")
+
+
+
+
+#todo: make a class, move elsewhere
+from shapesengine.inspectors.csvinspector import CSVInspector
+from shapesengine.inspectors.shapesinspector import ShapesInspector
+
+def generate_fields_for_csv_descriptor(source, descriptor):
+
+    for d in descriptor.items.all():
+        d.delete()
+        
+    inspector = CSVInspector(source.csv.path)
+    inspector.analyze()
+    generate_fields_from_meta(descriptor, inspector.meta)
+
+
+def generate_fields_for_shape_descriptor(source, descriptor):
+    for d in descriptor.items.all():
+        d.delete()
+        
+    inspector = ShapesInspector(source.shape)
+    inspector.analyze()
+    generate_fields_from_meta(descriptor, inspector.meta)
+
+
+
+def generate_fields_from_meta(descriptor, meta):
+    for field_name in meta:
+        field = meta[field_name]
+        item = DatasetDescriptorItem(descriptor=descriptor, name=field_name, type=field['type'])
+        item.save()
+
+#todo: make a class, move elsewhere #end
+
+
+
+
+
+
+
 
 class DyModel(models.Model):
 
@@ -262,6 +305,10 @@ class CsvSource(Source):
         return u"%s" % self.csv.path
         
         
+    def generate_fields_for_descriptor(self, descriptor):
+        return generate_fields_for_csv_descriptor(self, descriptor)
+        
+        
 
 class ShapeSource(Source):
     
@@ -270,20 +317,20 @@ class ShapeSource(Source):
     
     #TODO: move to FilePathField
     #shape = models.CharField(max_length=200)
-    shape = models.FilePathField(path=DEFAULT_SHAPES_PATH, recursive=True, max_length=200)
+    shape = models.CharField(max_length=300)
     
     _inspector_meta = None
     _shapes_inspector = None
     
     @property
     def default_name(self):
-        return os.path.split(self.shape.path)[-1]
+        return os.path.split(self.shape)[-1]
     
     @property
     def inspector(self):
         if self._shapes_inspector:
             return self._shapes_inspector
-        self._shapes_inspector = ShapesInspector(self.shape.path) 
+        self._shapes_inspector = ShapesInspector(self.shape) 
         return self._shapes_inspector
     
     @property
@@ -297,11 +344,14 @@ class ShapeSource(Source):
     
 
     def get_fields(self):
-        return self.inspectormeta.keys()
+        return self.meta.keys()
     
     
     def get_data(self):
         return self.inspector.getDataAsDict()
+        
+    def generate_fields_for_descriptor(self, descriptor):
+        return generate_fields_for_shape_descriptor(self, descriptor)
     
     
 class DatasetDescriptor(models.Model):
@@ -408,10 +458,14 @@ class DatasetDescriptor(models.Model):
                 if v is not None:
                     not_none_kwargs[k] = v
             
+            print "s", not_none_kwargs
             instance = Dataset(**not_none_kwargs)
             instance.save()
         
         return Dataset
+        
+    
+
 
 DESCRIPTOR_TYPE_CHOICES = []
 for x in DESCRIPTORS_TYPES_MAP:

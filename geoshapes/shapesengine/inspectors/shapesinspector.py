@@ -79,13 +79,13 @@ class ShapesInspector(BaseInspector):
         
         geometry = GEOSGeometry(geom.wkt, srid=source_srid)
         
-        
+        """
         if(source_srid != 4326):
             spatref_source = SpatialReference(source_srid)
             spatref_target = SpatialReference('WGS84')
             trans = CoordTransform(spatref_source, spatref_target)
             geometry.transform(trans)
-        
+        """
         
         if geom.__class__.__name__ == 'Polygon':
             g = geos.MultiPolygon(geometry)
@@ -127,7 +127,7 @@ class ShapesInspector(BaseInspector):
         for i, feature in enumerate(layer):
             properties = self.get_feature_properties(feature)
             geometry = feature.geom            
-            #geometry = self.fix_geometry_type(geometry, source_srid)
+            geometry = self.fix_geometry_type(geometry, source_srid)
             properties['geometry'] = geometry.wkt
 
             data.append(properties)

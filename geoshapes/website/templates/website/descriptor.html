@@ -225,6 +225,7 @@
                         if(response.status == 200){
                             ajaxutils.alertMessage("Rows here!", "alert-success");
                             var result = response.result;
+                            console.log("r", result);
                             if(result.rows){
                                 self.metadata(result.descriptor.metadata);
                                 self.loadRows(result.rows);
