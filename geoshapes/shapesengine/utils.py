@@ -5,6 +5,11 @@ from django.http import HttpResponse
 
 
 
+GEOM_FIELDS = ['PointField', 'MultiPointField', 'PolygonField', 'MultiPolygonField', 'LineStringField', 'MultiLineStringField',
+            'GeometryCollectionField']
+
+
+
 def instance_dict(instance, key_format=None, recursive=False, related_names=[], properties=[], check_json=True):
     
     """

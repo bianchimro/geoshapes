@@ -28,7 +28,7 @@
                
                
                
-               <a class="btn" href="{% url "website.views.add_source_descriptor_csv" source.id %}">Add another descriptor</a>
+               <a class="btn" href="{{add_descriptor_url}}">Add another descriptor</a>
            
            {% else %}
                <a class="btn btn-danger" data-bind="click: loadData">Load data</a>

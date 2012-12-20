@@ -13,10 +13,15 @@ urlpatterns = patterns('website.views',
     url(r'^load_source_data_ajax/(?P<source_id>\d+)/$', 'load_source_data_ajax', name="load_source_data_ajax"),
     url(r'^descriptor/(?P<descriptor_id>\d+)/$', 'descriptor', name="descriptor"),
     url(r'^add_source_descriptor_csv/(?P<source_id>\d+)/$', 'add_source_descriptor_csv', name="add_source_descriptor_csv"),
+    url(r'^add_source_descriptor_shape/(?P<source_id>\d+)/$', 'add_source_descriptor_shape', name="add_source_descriptor_shape"),
+    
     url(r'^descriptor_ajax/(?P<descriptor_id>\d+)/$', 'descriptor_ajax', name="descriptor_ajax"),
 
     url(r'^dataset_data_ajax/(?P<descriptor_id>\d+)/$', 'dataset_data_ajax', name="dataset_data_ajax"),
+    url(r'^dataset_geodata_ajax/(?P<descriptor_id>\d+)/$', 'dataset_geodata_ajax', name="dataset_geodata_ajax"),    
+    
     url(r'^dataset_table_view/(?P<descriptor_id>\d+)/$', 'dataset_table_view', name="dataset_table_view"),
+    url(r'^dataset_map_view/(?P<descriptor_id>\d+)/$', 'dataset_map_view', name="dataset_map_view"),
     
     url(r'^load_data_ajax/(?P<descriptor_id>\d+)/$', 'load_data_ajax', name="load_data_ajax"),
 

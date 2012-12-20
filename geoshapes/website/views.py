@@ -61,9 +61,14 @@ def source(request, source_id):
     base_source = Source.objects.get(pk=int(source_id))
     source = base_source.get_subclass()
     
+    if source.__class__.__name__ == 'CsvSource':
+        add_descriptor_url = reverse("website.views.add_source_descriptor_csv", args=( source.id,))
+    elif source.__class__.__name__ == 'ShapeSource':    
+        add_descriptor_url = reverse("website.views.add_source_descriptor_shape", args=( source.id,))
     
     descriptors = source.descriptor.all()
     #load_data_url = reverse('website.views.load_data_ajax', args=(source.id,))
+    
     
     allowed_types = json.dumps(DESCRIPTORS_TYPES_MAP.keys(),cls=DjangoJSONEncoder)
     allowed_names = json.dumps(source.get_fields())
@@ -71,6 +76,7 @@ def source(request, source_id):
     return render_to_response('website/source.html', 
         {   'source' : source, 
             'descriptors' : descriptors, 
+            'add_descriptor_url' : add_descriptor_url,
         },
     context_instance = RequestContext(request))
     
@@ -245,7 +251,47 @@ def dataset_data_ajax(request, descriptor_id):
     response.result = out
     
     return response.as_http_response()
+
+import json as simplejson
+#from vectorformats.Formats import Django, GeoJSON
+from djgeojson.serializers import Serializer as GeoJSONSerializer
+
+def dataset_geodata_ajax(request, descriptor_id):
     
+    response = AjaxResponse()
+    
+    try:
+        descriptor  = DatasetDescriptor.objects.select_related().get(id=int(descriptor_id))
+    except Exception, e:
+        response.status = 404
+        response.error = str(e)
+        return response.as_http_response()
+    
+    datamodel = descriptor.dymodel
+
+    out = {}
+    
+    objs = datamodel.Dataset.objects.all()#.geojson()
+    
+    limit = request.GET.get('limit', None)
+    offset = request.GET.get('offset', None)
+    #out_objs = collect_queryset_rows(objs, offset, limit)
+    
+    #vectorformats
+    #djf = Django.Django(geodjango='geom')
+    #geoj = GeoJSON.GeoJSON()
+    #out_objs = geoj.encode(djf.decode(objs))
+    
+    serializer = GeoJSONSerializer()
+    out_objs = serializer.serialize(objs, fields = datamodel.non_geo_fields)
+    
+    out = {}
+    out['rows'] = out_objs
+    out['descriptor'] = instance_dict(descriptor, recursive=True, related_names=['items'], properties=['metadata'])
+    response.result = out
+    
+    return response.as_http_response()
+
     
     
 def dataset_table_view(request, descriptor_id):
@@ -266,6 +312,24 @@ def dataset_table_view(request, descriptor_id):
             'paginator_page':dataset_page
         },
         context_instance = RequestContext(request))
+
+
+def dataset_map_view(request, descriptor_id):
+    
+    descriptor  = DatasetDescriptor.objects.select_related().get(id=int(descriptor_id))
+    datamodel = descriptor.dymodel
+    
+    objs = datamodel.Dataset.objects.all()
+    
+    return render_to_response('website/dataset_map_view.html', 
+        {   'rows' : objs, 
+            'meta' : descriptor.metadata,
+            'descriptor':descriptor,
+        },
+        context_instance = RequestContext(request))
+
+
+
 
 
 

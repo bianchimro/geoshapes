@@ -1,11 +1,13 @@
 # -*- coding: UTF-8 -*-
 import logging
 
-from django.db import models
+#from django.db import models
+from django.contrib.gis.db import models
 from md5 import new as md5_constructor
 from django.core.cache import cache
 
 from shapesengine import helpers
+from shapesengine import utils
 DEFAULT_APP_NAME = 'shapesengine'
 
 def get_dataset_model(dymodel, regenerate=False, notify_changes=True):
@@ -35,9 +37,14 @@ def get_dataset_model(dymodel, regenerate=False, notify_changes=True):
 
     # Add a field for each question
     fields = dymodel.dyfields.all()
+    has_geo_field = False
     for field in fields:
         field_name = field.get_field_name()
         attrs[field_name] = field.get_field()
+        if field.type in utils.GEOM_FIELDS:
+        
+           #adding a geomanager
+           attrs['objects'] = models.GeoManager()
 
     # Add a hash representing this model to help quickly identify changes
     attrs['_hash'] = generate_model_hash(dymodel)

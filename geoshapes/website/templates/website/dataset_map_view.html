@@ -1,0 +1,162 @@
+{% extends "website/base.html" %}
+{% load url from future %}
+{% load utilfilters %}
+
+
+{% block extra_head %}
+    <style>
+		 
+		#map {
+			width: 100%;
+			height: 500px;
+			border: 1px solid black;
+			background: #ccc;
+		}	
+		
+		#map img { max-width:none; }
+	</style>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container">
+
+    <div class="row">
+        <div class="span12">
+        <h2>Dataset</h2>
+        <a href="{% url "website.views.descriptor" descriptor.id %}">To descriptor</a>
+        <div id="map">
+        
+        
+        </div>
+        
+        
+        <script>
+        </script>
+                
+        </div>
+        
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block extra_body %}
+    <script src='http://openlayers.org/api/OpenLayers.js'></script>
+    <script>
+    
+        $(function(){
+        
+            var data_url = '{% url "website.views.dataset_geodata_ajax" descriptor.id %}';
+            var map = new OpenLayers.Map('map');
+            var osm = new OpenLayers.Layer.OSM({});
+            map.addLayer(osm);
+            map.zoomToMaxExtent();    
+            
+            
+            
+        var addLayer = function(results){
+            console.log(results.features)
+            var geojson_layer = new OpenLayers.Layer.Vector("GeoJSON", {
+                
+            });
+            var geojson_format = new OpenLayers.Format.GeoJSON({
+                'internalProjection': map.baseLayer.projection,
+                'externalProjection': new OpenLayers.Projection("EPSG:4326")
+            });
+            
+            
+            for(var i=0,n=results.features.length;i<n;i++){
+                var feat = results.features[i];
+                var fr = geojson_format.read(JSON.stringify(feat));
+                geojson_layer.addFeatures(fr);
+            }
+
+            map.addLayer(geojson_layer);
+            map.zoomToExtent(geojson_layer.getDataExtent());
+            console.log(geojson_layer);
+        
+        };
+        /*
+        var.setupPopups = function(){
+    
+            var field=self.inputObservables['popup_field']();  
+            if(!field){
+                console.log("no field set");
+                return;
+            }
+          
+        
+            if(self.geojson_layer){
+                
+                controls = self.map.getControlsByClass("OpenLayers.Control.SelectFeature");
+                for(var i=0,n=controls.length;i<n;i++){
+                    controls[i].destroy();
+                }
+                
+                var selectControl = new OpenLayers.Control.SelectFeature(self.geojson_layer,
+                {
+                    //onSelect: onPopupFeatureSelect,
+                    //onUnselect: onPopupFeatureUnselect 
+                });
+              
+                var onPopupFeatureSelect = function(feature) {
+                    var selectedFeature = feature;
+                    var txt = sketchui.getField(selectedFeature, "attributes."+field);
+                    
+                    popup = new OpenLayers.Popup.FramedCloud("chicken",
+                        feature.geometry.getBounds().getCenterLonLat(),
+                        null, txt, null, true);
+                    
+                    popup.panMapIfOutOfView = true;
+                    popup.autoSize = true;
+                    feature.popup = popup;
+                    self.map.addPopup(popup);
+                }
+                var onPopupFeatureUnselect = function(feature) {
+                    self.map.removePopup(feature.popup);
+                    feature.popup.destroy();
+                    feature.popup = null;
+                }
+                
+                selectControl.onSelect = onPopupFeatureSelect;
+                selectControl.onUnselect = onPopupFeatureUnselect;
+                
+                
+                self.map.addControl(selectControl);
+                selectControl.activate();
+                
+                
+            }
+        
+        };
+        */
+        
+        
+        var loadLayer = function(){    
+            
+            $.ajax({
+                url : data_url,
+                type : 'GET',
+                dataType : 'json',
+                success : function(response){
+                    console.log(response);
+                    addLayer(JSON.parse(response.result.rows));
+                
+                }
+                
+            
+            });
+        };
+        
+        loadLayer();
+        
+        });
+    
+    
+    </script>
+
+{% endblock %}

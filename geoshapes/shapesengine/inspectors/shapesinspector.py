@@ -43,7 +43,7 @@ class ShapesInspector(BaseInspector):
         types = layer.field_types
         
         for i, f in enumerate(fields):
-            self.names.append(f)
+            self.names.append(f.lower())
             t = types[i]
             name = t.__name__
             es_type = TYPES_MAPPIG[name]
@@ -66,7 +66,7 @@ class ShapesInspector(BaseInspector):
         out = {}
 
         for field in feature.fields:
-            out[field] = feature.get(field)
+            out[field.lower()] = feature.get(field)
         
         return out
     
@@ -129,7 +129,6 @@ class ShapesInspector(BaseInspector):
             geometry = feature.geom            
             geometry = self.fix_geometry_type(geometry, source_srid)
             properties['geometry'] = geometry.wkt
-
             data.append(properties)
         
         

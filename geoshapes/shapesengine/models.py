@@ -147,7 +147,24 @@ class DyModel(models.Model):
         val = [(f.name, f.type, f.args, f.kwargs) for f in self.dyfields.all()]
         return json.dumps(val)
 
+    
+    @property
+    def has_geo_fields(self):
+        for f in self.dyfields.all():
+            if f.type in utils.GEOM_FIELDS:
+                return True
+        return False
 
+    @property
+    def non_geo_fields(self):
+        out = []
+        for f in self.dyfields.all():
+            if f.type not in utils.GEOM_FIELDS:
+                out.append(f.get_field_name())
+        return out
+
+        
+    
     
 class DyField(models.Model):
     """
@@ -449,7 +466,7 @@ class DatasetDescriptor(models.Model):
                     kwargs[f] = value
 
                 except Exception, e:
-                    print f, e
+                    print "xxx", f, e, parsers[f]
                     kwargs[f]= None
             
             not_none_kwargs = {}
@@ -458,7 +475,6 @@ class DatasetDescriptor(models.Model):
                 if v is not None:
                     not_none_kwargs[k] = v
             
-            print "s", not_none_kwargs
             instance = Dataset(**not_none_kwargs)
             instance.save()
         
@@ -486,9 +502,8 @@ class DatasetDescriptorItem(models.Model):
 
 #creating stored models
 from shapesengine.dynamic_models import build_existing_dataset_models
-"""
+
 try:
     build_existing_dataset_models(DyModel)
 except:
     pass    
-"""
