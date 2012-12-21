@@ -1,3 +1,5 @@
+# Modal dialog should handle confirm with no hassles
+
 # Error messages should be propagated to modal dialogs
 
 # Modal dialog should be updatable with message after it has been shown
