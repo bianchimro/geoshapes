@@ -1,0 +1,22 @@
+{% load url from future %}
+
+<h3>Your datasets</h3>
+{% if descriptors %}
+    <table>
+    {% for descriptor in descriptors %}
+        <tr>
+            <td>
+            {{ descriptor.name }}
+            </td>
+            <td>
+                <a href="{% url "website.views.descriptor" descriptor.id %}">View</a>
+            </td>
+            
+        </tr>
+    {% endfor %}
+    </table>
+{% else %}
+
+    <p>You have no dataset yet.</p>
+
+{% endif %}

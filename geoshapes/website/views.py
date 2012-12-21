@@ -97,6 +97,19 @@ def source(request, source_id):
     context_instance = RequestContext(request))
     
 
+
+def descriptors(request):
+
+    descriptors = DatasetDescriptor.objects.select_related().all()
+    return render_to_response('website/descriptors.html', 
+        {   
+            'descriptors' : descriptors, 
+        },
+    context_instance = RequestContext(request))
+
+
+
+
 def descriptor(request, descriptor_id):
     
     descriptor = DatasetDescriptor.objects.get(id=int(descriptor_id))

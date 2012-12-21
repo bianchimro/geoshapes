@@ -7,7 +7,10 @@
 
     <div class="row">
         <div class="span12">
-        <h2>Dataset</h2>
+        <h2>Descriptor</h2>
+        {{ descriptor.source.name }}  <a class="" href="{% url "website.views.source" descriptor.source.id %}">view source</a> 
+        
+        </div>
         
         <div class="span12" id="descriptor-container">
         <form>
@@ -19,23 +22,28 @@
                 </tr>
                 <tbody data-bind="foreach: descriptorItems()">
                     <td>
-                        <span data-bind="text:name">
+                        <select data-bind="value:name, options:$parent.allowed_names">
                     </td>
                     <td>
-                        <span data-bind="text:type">
+                    <select data-bind="value:type, options:$parent.allowed_types">
                     </select>
+                    </td>
+                    <td>
+                        <span class="close" data-bind="click: $parent.removeDescriptor">x</span>
                     </td>
                                     
                 </tbody>
             </table>
             
+            <button class="btn" data-bind="click: addItem">Add item</button>
         </div>
-        
+        </form>
+        <button class="btn btn-danger" data-bind="click: save">Save description</button>
         <button class="btn btn-danger" data-bind="click: loadData">Reload data</button>
         <button class="btn btn-danger" data-bind="click: getRows">Show records</button>
         <a href="{% url "website.views.dataset_table_view" descriptor.id %}">View as table</a>
         {% if descriptor.source.source_class == 'ShapeSource' %}
-            <a href="{% url "website.views.dataset_map_view" descriptor.id %}">View as map</a>
+        <a href="{% url "website.views.dataset_map_view" descriptor.id %}">View as map</a>
         {% endif %}        
         <div id="rows-container" data-bind="if: rows()">
             <table class="table table-condensed table-bordered-table-striped">
