@@ -26,6 +26,8 @@ ajaxutils.openModal = function(modalName, options){
     console.log("m", modalName, options);
     var options = options || {};
     var body = options.body || '';
+    var head = options.head || '';
+    
     var closable = (options.closable === true);
     var closeMarkup = '';
     if(closable){
@@ -37,8 +39,7 @@ ajaxutils.openModal = function(modalName, options){
     var tmpl = [
         // tabindex is required for focus
         '<div id="modal-dialog-'+ modalName+'" class="modal hide fade" tabindex="-1">',
-          '<div class="modal-header">'+closeMarkup,
-            '<h3>Modal header</h3>', 
+          '<div class="modal-header">'+closeMarkup+head,
           '</div>',
           '<div class="modal-body">'+body,
           '</div>',

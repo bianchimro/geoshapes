@@ -35,32 +35,35 @@
     <div class="row">
         <div class="span12">
             <h3>Operations</h3>
-            <button class="btn btn-danger" data-bind="click: loadData">Reload data</button>
+                <button class="btn btn-danger" data-bind="click: loadData">Reload data</button>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="span12">
+            <h3>Data</h3>
+            <button class="btn btn-info" data-bind="click: getRows">Preview records</button>
+            <a class="btn" href="{% url "website.views.dataset_table_view" descriptor.id %}">View as table</a>
+            {% if descriptor.source.source_class == 'ShapeSource' %}
+                <a class="btn" href="{% url "website.views.dataset_map_view" descriptor.id %}">View as map</a>
+            {% endif %}        
+            <div id="rows-container" data-bind="if: rows()">
+                <table class="table table-condensed table-bordered-table-striped">
+                <tbody>
+                    <tr data-bind="html: $root.getTableHeader"></tr>
+                </tbody>
+                <tbody data-bind="foreach:rows()">
+                    <tr data-bind="html: getTableRow()"></tr>
+                </tbody>
+                </table>
             </div>
         </div>
-
-        <div class="row">
-            <div class="span12">
-                <h3>Visualizations</h3>
-                <button class="btn btn-info" data-bind="click: getRows">Preview records</button>
-                <a class="btn" href="{% url "website.views.dataset_table_view" descriptor.id %}">View as table</a>
-                {% if descriptor.source.source_class == 'ShapeSource' %}
-                    <a class="btn" href="{% url "website.views.dataset_map_view" descriptor.id %}">View as map</a>
-                {% endif %}        
-                <div id="rows-container" data-bind="if: rows()">
-                    <table class="table table-condensed table-bordered-table-striped">
-                    <tbody>
-                        <tr data-bind="html: $root.getTableHeader"></tr>
-                    </tbody>
-                    <tbody data-bind="foreach:rows()">
-                        <tr data-bind="html: getTableRow()"></tr>
-                    </tbody>
-                    </table>
-                </div>
-
+    </div>
+    
+    <div class="row">
+        <div class="span12">
+            <h3>Visualizations</h3>
         </div>
-        
-        
     </div>
 </div>
 
@@ -173,7 +176,7 @@
             };
             
             self.load = function(){
-            
+                ajaxutils.openModal('descriptorLoading', {'body': '<p>Loading Dataset</p><img src="{{ STATIC_URL}}website/img/ajax-loader.gif"/>'});
                
                 $.ajax({
                     
@@ -181,10 +184,10 @@
                     dataType : 'json',
                     url : descriptor_resource_url,
                     success : function(response){
+                        ajaxutils.closeModal('descriptorLoading');
                         if(response.status == 200){
                             var result = response.result;
                             self.deserialize(result);
-                            ajaxutils.alertMessage("Descriptor loaded", "alert-success");
                         }
                         else{
                             ajaxutils.alertMessage("Could not load descriptor:" + response.error, "alert-error");
@@ -197,13 +200,14 @@
             
             self.loadData = function(){
             
-                ajaxutils.alertMessage("Recreating table!");
+                ajaxutils.openModal('dataLoad', {'body': '<p>Loading preview</p><img src="{{ STATIC_URL}}website/img/ajax-loader.gif"/>'});
                 $.ajax({
                     
                     type : 'POST',
                     dataType : 'json',
                     url : load_data_url,
                     success : function(response){
+                        ajaxutils.closeModal('dataLoad');
                         if(response.status == 200){
                             ajaxutils.alertMessage("Tables recreated!", "alert-success");
                         }
@@ -220,15 +224,15 @@
             
             
             self.getRows = function(){
-                ajaxutils.alertMessage("getting rows!");
+                ajaxutils.openModal('rowsLoading', {'body': '<p>Loading preview</p><img src="{{ STATIC_URL}}website/img/ajax-loader.gif"/>'});
                 $.ajax({
                     data : { limit: 100 },
                     type : 'get',
                     dataType : 'json',
                     url : dataset_data_url,
                     success : function(response){
+                        ajaxutils.closeModal('rowsLoading');
                         if(response.status == 200){
-                            ajaxutils.alertMessage("Rows here!", "alert-success");
                             var result = response.result;
                             console.log("r", result);
                             if(result.rows){
