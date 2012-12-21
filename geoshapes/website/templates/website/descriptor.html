@@ -229,11 +229,13 @@
             
             self.dropDescriptor = function(){
                 //#TODO:should be confirmed
+                ajaxutils.openModal('deleteDataset', {'body': '<p>Deleting dataset</p><img src="{{ STATIC_URL}}website/img/ajax-loader.gif"/>'});
                 $.ajax({
                 
                     url : descriptor_drop_url,
                     type : 'POST',
                     success : function(response){
+                        ajaxutils.closeModal('deleteDataset');
                         console.log(response);
                         if(response.status == 200){
                             window.location  = '{% url "website.views.descriptors" %}';
