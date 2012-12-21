@@ -1,9 +1,13 @@
-Error messages should be propagated to modal dialogs
+# Error messages should be propagated to modal dialogs
 
-Modal dialog should be updatable with message after it has been shown
+# Modal dialog should be updatable with message after it has been shown
 
-In the datasetdescriptor model ,source should be optional (it should be possibile to create 
+# In the datasetdescriptor model ,source should be optional (it should be possibile to create 
 ad dataset without a source)
 
-A link to the originating source (if any) should be provided on each dataset page
+# A link to the originating source (if any) should be provided on each dataset page
+
+# Celery or cueless should be used to manage long running ajax calls
+
+
 
