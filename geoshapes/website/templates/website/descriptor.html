@@ -7,46 +7,57 @@
 
     <div class="row">
         <div class="span12">
-        <h2>Dataset</h2>
-        
-        <div class="span12" id="descriptor-container">
-        <form>
-            <table class="table">
-                <tr>
-                    <td>Name</td>
-                    <td>Type</td>
-                    <td></td>
-                </tr>
-                <tbody data-bind="foreach: descriptorItems()">
-                    <td>
-                        <span data-bind="text:name">
-                    </td>
-                    <td>
-                        <span data-bind="text:type">
-                    </select>
-                    </td>
-                                    
-                </tbody>
-            </table>
+            <h2>Dataset</h2>
             
+            <div id="descriptor-container">
+                <form>
+                    <table class="table">
+                        <tr>
+                            <td>Name</td>
+                            <td>Type</td>
+                            <td></td>
+                        </tr>
+                        <tbody data-bind="foreach: descriptorItems()">
+                            <td>
+                                <span data-bind="text:name">
+                            </td>
+                            <td>
+                                <span data-bind="text:type">
+                            </select>
+                            </td>
+                                            
+                        </tbody>
+                    </table>
+                </form>
+            </div>
         </div>
-        
-        <button class="btn btn-danger" data-bind="click: loadData">Reload data</button>
-        <button class="btn btn-danger" data-bind="click: getRows">Show records</button>
-        <a href="{% url "website.views.dataset_table_view" descriptor.id %}">View as table</a>
-        {% if descriptor.source.source_class == 'ShapeSource' %}
-            <a href="{% url "website.views.dataset_map_view" descriptor.id %}">View as map</a>
-        {% endif %}        
-        <div id="rows-container" data-bind="if: rows()">
-            <table class="table table-condensed table-bordered-table-striped">
-            <tbody>
-                <tr data-bind="html: $root.getTableHeader"></tr>
-            </tbody>
-            <tbody data-bind="foreach:rows()">
-                <tr data-bind="html: getTableRow()"></tr>
-            </tbody>
-            </table>
+    </div>
+    <div class="row">
+        <div class="span12">
+            <h3>Operations</h3>
+            <button class="btn btn-danger" data-bind="click: loadData">Reload data</button>
+            </div>
         </div>
+
+        <div class="row">
+            <div class="span12">
+                <h3>Visualizations</h3>
+                <button class="btn btn-info" data-bind="click: getRows">Preview records</button>
+                <a class="btn" href="{% url "website.views.dataset_table_view" descriptor.id %}">View as table</a>
+                {% if descriptor.source.source_class == 'ShapeSource' %}
+                    <a class="btn" href="{% url "website.views.dataset_map_view" descriptor.id %}">View as map</a>
+                {% endif %}        
+                <div id="rows-container" data-bind="if: rows()">
+                    <table class="table table-condensed table-bordered-table-striped">
+                    <tbody>
+                        <tr data-bind="html: $root.getTableHeader"></tr>
+                    </tbody>
+                    <tbody data-bind="foreach:rows()">
+                        <tr data-bind="html: getTableRow()"></tr>
+                    </tbody>
+                    </table>
+                </div>
+
         </div>
         
         

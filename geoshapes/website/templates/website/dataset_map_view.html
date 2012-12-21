@@ -45,7 +45,9 @@
 {% endblock %}
 
 {% block extra_body %}
-    <script src='http://openlayers.org/api/OpenLayers.js'></script>
+    <!--<script src='http://openlayers.org/api/OpenLayers.js'></script>-->
+    <script src='{{STATIC_URL}}/website/js/vendor/OpenLayers/OpenLayers.js'></script>
+    
     <script>
     
         $(function(){

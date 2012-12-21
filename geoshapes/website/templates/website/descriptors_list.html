@@ -6,7 +6,7 @@
     {% for descriptor in descriptors %}
         <tr>
             <td>
-            {{ descriptor.name }}
+            {{ descriptor.source.name }}
             </td>
             <td>
                 <a href="{% url "website.views.descriptor" descriptor.id %}">View</a>

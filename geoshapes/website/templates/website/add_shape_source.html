@@ -1,5 +1,5 @@
 {% load url from future %}
-<button class="btn btn-danger" onclick="$('#source-shape-add-form').modal('show');">Add shape source</button>
+<button class="btn btn-danger btn-small" onclick="$('#source-shape-add-form').modal('show');">Add shape source</button>
 
 <div id="source-shape-add-form" class="modal fade hide">
     <div class="modal-header">
@@ -17,7 +17,7 @@
 
     </div>
     <div class="modal-footer">
-        <button class="btn btn-danger" id="save-document" data-bind="click: sumbitForm">Salva</button>
+        <button class="btn btn-danger " id="save-document" data-bind="click: sumbitForm">Salva</button>
         <button class="btn" id="cancel-add-document" data-bind="click: reset">Annulla</button>
     </div>
 </div>
