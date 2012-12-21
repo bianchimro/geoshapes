@@ -1,4 +1,6 @@
 {% load url from future %}
+{% load utiltags %}
+
  <div class="navbar navbar-inverse navbar-fixed-top">
      <div class="navbar-inner">
          <div class="container">
@@ -7,11 +9,10 @@
                  <span class="icon-bar"></span>
                  <span class="icon-bar"></span>
              </a>
-             <a class="brand" href="{% url "website.views.index" %}">Geoshapes</a>
+             <a class="brand {% active_if_starts request.path '/' %}" href="{% url "website.views.index" %}">Geoshapes</a>
              <div class="nav-collapse collapse">
                  <ul class="nav">
-                     <li class="active"><a href="{% url "website.views.index" %}">Home</a></li>
-                     <li><a href="{% url "website.views.descriptors" %}">Datasets</a></li>
+                     <li class="{% active_if_starts request.path '/descriptors' %}"><a href="{% url "website.views.descriptors" %}">Datasets</a></li>
                      <li><a href="#about">About</a></li>
                      <li><a href="#contact">Contact</a></li>
                      <li class="dropdown">
