@@ -38,6 +38,7 @@
         <div class="span12">
             <h3>Operations</h3>
                 <button class="btn btn-danger" data-bind="click: loadData">Reload data</button>
+                <button class="btn btn-danger" data-bind="click: dropDescriptor">Delete this dataset</button>
         </div>
     </div>
 
@@ -84,6 +85,8 @@
         var load_data_url = '{{load_data_url|safe}}';
         var dataset_data_url = '{{dataset_data_url|safe}}';
         var initial_descriptor = JSON.parse('{{descriptor_json|safe}}');
+        
+        var descriptor_drop_url = '{{descriptor_drop_url|safe}}';
     
         var DescriptorItem = function(options){
             var self=this;
@@ -220,6 +223,25 @@
                     }
                 
                 });
+            
+            };
+            
+            
+            self.dropDescriptor = function(){
+                $.ajax({
+                
+                    url : descriptor_drop_url,
+                    type : 'POST',
+                    success : function(response){
+                        console.log(response);
+                        if(response.status == 200){
+                            window.location  = '{% url "website.views.descriptors" %}';
+                        }
+                    }
+                
+                
+                });
+            
             
             };
             

@@ -23,6 +23,7 @@ urlpatterns = patterns('website.views',
     url(r'^add_source_descriptor_shape/(?P<source_id>\d+)/$', 'add_source_descriptor_shape', name="add_source_descriptor_shape"),
     
     url(r'^descriptor_ajax/(?P<descriptor_id>\d+)/$', 'descriptor_ajax', name="descriptor_ajax"),
+    url(r'^drop_descriptor_ajax/(?P<descriptor_id>\d+)/$', 'drop_descriptor_ajax', name="drop_descriptor_ajax"),    
 
     url(r'^dataset_data_ajax/(?P<descriptor_id>\d+)/$', 'dataset_data_ajax', name="dataset_data_ajax"),
     url(r'^dataset_geodata_ajax/(?P<descriptor_id>\d+)/$', 'dataset_geodata_ajax', name="dataset_geodata_ajax"),  

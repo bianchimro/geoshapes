@@ -118,11 +118,16 @@ def descriptor(request, descriptor_id):
     base_source = Source.objects.get(pk=descriptor.source_id)
     source = base_source.get_subclass()
 
-    descriptor_json = json.dumps(instance_dict(descriptor, recursive=True),cls=DjangoJSONEncoder)
+    
     load_data_url = reverse('website.views.load_data_ajax', args=(descriptor.id,))
     dataset_data_url = reverse('website.views.dataset_data_ajax', args=(descriptor.id,))
+    descriptor_drop_url = reverse("website.views.drop_descriptor_ajax", args=(descriptor_id,))
+    
+
+    descriptor_json = json.dumps(instance_dict(descriptor, recursive=True),cls=DjangoJSONEncoder)
     allowed_types = json.dumps(DESCRIPTORS_TYPES_MAP.keys(),cls=DjangoJSONEncoder)
     allowed_names = json.dumps(source.get_fields(),cls=DjangoJSONEncoder)
+    
     
     return render_to_response('website/descriptor.html', 
         {   'descriptor' : descriptor, 
@@ -132,6 +137,7 @@ def descriptor(request, descriptor_id):
             'load_data_url' : load_data_url,
             'dataset_data_url' : dataset_data_url,
             'descriptor_resource_url' : descriptor_resource_url,
+            'descriptor_drop_url' : descriptor_drop_url
         },
         context_instance = RequestContext(request))
 
@@ -224,6 +230,41 @@ def descriptor_ajax(request, descriptor_id=None):
     
     return response.as_http_response()
   
+
+def drop_descriptor_ajax(request, descriptor_id):
+    response = AjaxResponse()
+    try:
+        descriptor = DatasetDescriptor.objects.get(pk=int(descriptor_id))
+    except Exception, e:
+        response.status = 404
+        response.error = str(e)
+        return response.as_http_response()
+
+    if request.method == 'POST':
+        #dropping descriptor
+        #for now we delete manually source and dynamic model
+        #TODO: handle with signals!
+
+        drop_source = False
+        source = descriptor.source
+        if source.num_descriptors == 1:
+            #drop source
+            drop_source = True
+        
+        #TODO: when deleting a dymodel the corresponding table should be deleted!
+        # Handle with signals
+        if descriptor.has_dymodel:
+            if descriptor.dymodel.has_table:
+                dataset = descriptor.dymodel.Dataset
+                helpers.delete_db_table(dataset)
+
+            descriptor.dymodel.delete()
+        
+        descriptor.delete()
+        response.result = 'deleted'
+        
+    
+    return response.as_http_response()
     
 
 def load_data_ajax(request, descriptor_id):

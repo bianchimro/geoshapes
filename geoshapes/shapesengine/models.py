@@ -213,7 +213,13 @@ class Source(models.Model):
         
     @property
     def has_descriptors(self):
-        return bool(self.descriptors)
+        return bool(self.descriptor)
+        
+    @property
+    def num_descriptors(self):
+        if self.has_descriptors:
+            return self.descriptor.all().count()
+        return 0
 
     @property
     def first_descriptor(self):

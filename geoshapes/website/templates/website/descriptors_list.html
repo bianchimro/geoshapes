@@ -2,14 +2,14 @@
 
 <h3>Your datasets</h3>
 {% if descriptors %}
-    <table>
+    <table class="table">
     {% for descriptor in descriptors %}
         <tr>
             <td>
             {{ descriptor.source.name }}
             </td>
             <td>
-                <a href="{% url "website.views.descriptor" descriptor.id %}">View</a>
+                <a class="btn btn-mini btn-info" href="{% url "website.views.descriptor" descriptor.id %}">View</a>
             </td>
             
         </tr>
