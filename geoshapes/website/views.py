@@ -427,6 +427,7 @@ def load_source_data_ajax(request, source_id):
     
         out = {}
         out['descriptor'] = instance_dict(descriptor, recursive=True, related_names=['items'], properties=['metadata'])
+        out['descriptor_url'] = reverse("website.views.descriptor", args=(descriptor.id,))
         response.result = out
 
     except Exception, e:
@@ -467,7 +468,8 @@ def add_csv_source_ajax(request):
             
             source_dict = instance_dict(source_instance)
             source_url = reverse("website.views.source", args=(source_instance.id,))
-            out = { 'source' : source_dict, 'source_url' : source_url }
+            load_source_data_url = reverse("website.views.load_source_data_ajax", args=(source_instance.id,))
+            out = { 'source' : source_dict, 'source_url' : source_url, 'load_source_data_url' :  load_source_data_url}
             response.result = out
             
         except Exception, e:
@@ -517,7 +519,9 @@ def add_shape_source_ajax(request):
             
             source_dict = instance_dict(source_instance)
             source_url = reverse("website.views.source", args=(source_instance.id,))
-            out = { 'source' : source_dict, 'source_url' : source_url }
+            load_data_url = reverse("website.views.load_data_ajax", args=(source_instance.id,))
+            
+            out = { 'source' : source_dict, 'source_url' : source_url, 'load_data_url' :  load_data_url }
             response.result = out
             
         except Exception, e:

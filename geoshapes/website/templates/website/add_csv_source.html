@@ -1,5 +1,5 @@
 {% load url from future %}
-<button class="btn btn-danger btn-small" onclick="$('#source-add-form').modal('show');">Add csv source</button>
+<button class="btn btn-danger btn-small btn-fixed200 " onclick="$('#source-add-form').modal('show');">Add csv file</button>
 
 <div id="source-add-form" class="modal fade hide">
     <div class="modal-header">
@@ -32,6 +32,7 @@
             
             var source_post_url = '{% url "website.views.add_csv_source_ajax" %}';
             var listSelector = '{{ list_selector|default:"attachments-list"}}';
+            
             {% comment %}
             /*
             
@@ -86,7 +87,8 @@
                         success : function(response){
                             if(response.status == 200){
                                 self.reset();
-                                window.location = response.result.source_url;
+                                //window.location = response.result.source_url;
+                                self.generateTable(response.result.load_source_data_url);
                             } else{
                                 ajaxutils.alertMessage("Error:" + response.error, "alert-error");
                             }
@@ -95,6 +97,39 @@
                     });
                 
                 };
+                
+                
+                self.generateTable = function(url){
+                    ajaxutils.openModal('generateTable', {'body': '<p>Generating dataset</p><img src="{{ STATIC_URL}}website/img/ajax-loader.gif"/>'});
+                    $.ajax({
+                        url : url,
+                        type : 'POST',
+                        dataType : 'json',
+                        success : function(response){
+                            ajaxutils.closeModal('generateTable');
+                            if(response.status == 200){
+                                    ajaxutils.alertMessage("Data loaded", "alert-success");
+                                    //window.location = window.location;
+                                    window.location = response.result.descriptor_url;
+                            
+                            }else{
+                                ajaxutils.alertMessage("Error:" + response.error, "alert-error");
+                            }
+                        
+                        }
+                    
+                    
+                    });
+                
+                };
+
+                
+                
+                
+                
+                
+                
+                
                 
                 
                 self.updateDom = function(html){
