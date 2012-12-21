@@ -102,8 +102,8 @@ class ShapeChecker(object):
         # ensure proper file contents by extensions inside
         if not self.check_zip_contents('shp', zfile):
             return False, 'Found Zip Archive but no file with a .shp extension found inside.'
-        elif not self.check_zip_contents('prj', zfile):
-            return False, 'You must supply a .prj file with the Shapefile to indicate the projection.'
+        #elif not self.check_zip_contents('prj', zfile):
+        #    return False, 'You must supply a .prj file with the Shapefile to indicate the projection.'
         elif not self.check_zip_contents('dbf', zfile):
             return False, 'You must supply a .dbf file with the Shapefile to supply attribute data.'
         elif not self.check_zip_contents('shx', zfile):

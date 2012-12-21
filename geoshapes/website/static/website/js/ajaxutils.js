@@ -19,3 +19,42 @@ ajaxutils.alertMessage = function(message, cssClass){
 };
 
 //#todo: add a modal alert
+
+ajaxutils.openModals = {};
+
+ajaxutils.openModal = function(modalName, options){
+    console.log("m", modalName, options);
+    var options = options || {};
+    var body = options.body || '';
+    var closable = (options.closable === true);
+    var closeMarkup = '';
+    if(closable){
+        closeMarkup = '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>';
+    }
+    
+    //var manager = $('body').modalmanager('loading');
+    //console.log("man", manager);
+    var tmpl = [
+        // tabindex is required for focus
+        '<div id="modal-dialog-'+ modalName+'" class="modal hide fade" tabindex="-1">',
+          '<div class="modal-header">'+closeMarkup,
+            '<h3>Modal header</h3>', 
+          '</div>',
+          '<div class="modal-body">'+body,
+          '</div>',
+          '<div class="modal-footer">',
+          '</div>',
+        '</div>'
+      ].join('');
+      
+
+      $(tmpl).modal();
+     ajaxutils.openModals[modalName] = true;
+}
+
+ajaxutils.closeModal = function(modalName){
+    $('#modal-dialog-'+ modalName).modal('hide');
+    delete ajaxutils.openModals[modalName];
+    //delete div!
+
+}

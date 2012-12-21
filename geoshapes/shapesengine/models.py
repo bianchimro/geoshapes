@@ -376,6 +376,7 @@ class DatasetDescriptor(models.Model):
     name = models.CharField(max_length=200, default="Descriptor")
     source = models.ForeignKey(Source, related_name='descriptor', null=True, blank=True)
     
+    
     def save(self, *args, **kwargs):
         return super(DatasetDescriptor, self).save( *args, **kwargs);
           
@@ -396,12 +397,16 @@ class DatasetDescriptor(models.Model):
     def metadata(self):
         if self.dymodel:
             meta = self.generate_meta()
-            out = {}
 
+            out = { 'fields'  : {}}
+            
             for f in meta['fields']:
                 name = f
                 inst = meta['fields'][f]
-                out[name] = inst['type']
+                out['fields'][name] = inst['type']
+            
+            out['geo_fields'] = meta ['geo_fields']
+            out['non_geo_fields'] = meta ['non_geo_fields']
             return out
         return None
 
@@ -433,15 +438,23 @@ class DatasetDescriptor(models.Model):
         datamodel = self.dymodel
         fields = {}
         parsers = {}
+        geo_fields = []
+        non_geo_fields = []
     
         for descriptor_item in self.items.all():
             mapped_type =  DESCRIPTORS_TYPES_MAP[descriptor_item.type]
             field_name = str(descriptor_item.get_field_name())
             label = descriptor_item.name
+             
+            if utils.is_geom_field(mapped_type['model']):
+                geo_fields.append(field_name)
+            else:
+                non_geo_fields.append(field_name)
+                
             fields[field_name] = {"name":field_name, "label":label,"type":descriptor_item.type}
             parsers[field_name] = mapped_type['parser']
 
-        return  {'fields':fields, 'parsers':parsers}
+        return  {'fields':fields, 'parsers':parsers, 'geo_fields' : geo_fields, 'non_geo_fields' : non_geo_fields}
     
     
     
@@ -466,7 +479,7 @@ class DatasetDescriptor(models.Model):
                     kwargs[f] = value
 
                 except Exception, e:
-                    print "xxx", f, e, parsers[f]
+                    #print "xxx", f, e, parsers[f]
                     kwargs[f]= None
             
             not_none_kwargs = {}
@@ -502,8 +515,9 @@ class DatasetDescriptorItem(models.Model):
 
 #creating stored models
 from shapesengine.dynamic_models import build_existing_dataset_models
-
+"""
 try:
     build_existing_dataset_models(DyModel)
 except:
     pass    
+"""

@@ -16,7 +16,7 @@
         </div>
         <table class="table">
         <tr>
-            {% for field in meta %}
+            {% for field in meta.non_geo_fields %}
             <td>
             {{ field }}
             </td>
@@ -24,7 +24,7 @@
         </tr>
         {% for row in paginator_page.object_list %}
         <tr>
-          {% for field in meta %}
+          {% for field in meta.non_geo_fields %}
          <td>{{ row|get:field }}</td>
         {% endfor %}
         </tr>

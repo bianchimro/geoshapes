@@ -50,7 +50,7 @@ def get_dataset_model(dymodel, regenerate=False, notify_changes=True):
     attrs['_hash'] = generate_model_hash(dymodel)
 
     # A convenience function for getting the data in a predictablly ordered tuple
-    attrs['data'] = property(lambda s: tuple(getattr(s, q.slug) for q in questions))
+    #attrs['data'] = property(lambda s: tuple(getattr(s, q.slug) for q in questions))
 
     model = type(_model_name, (models.Model,), attrs)
 

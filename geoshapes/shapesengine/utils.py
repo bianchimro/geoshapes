@@ -9,8 +9,12 @@ GEOM_FIELDS = ['PointField', 'MultiPointField', 'PolygonField', 'MultiPolygonFie
             'GeometryCollectionField']
 
 
+def is_geom_field(field_type):
+    #print "xxx", field_type
+    return field_type.upper() in [x.upper() for x in GEOM_FIELDS]
 
-def instance_dict(instance, key_format=None, recursive=False, related_names=[], properties=[], check_json=True):
+
+def instance_dict(instance, key_format=None, recursive=False, related_names=[], properties=[], check_json=True, ignore_fields=[]):
     
     """
     Returns a dictionary containing field names and values for the given instance
@@ -23,6 +27,8 @@ def instance_dict(instance, key_format=None, recursive=False, related_names=[], 
     d = {}
     for field in instance._meta.fields:
         attr = field.name
+        if attr in ignore_fields:
+            continue
         value = getattr(instance, attr)
         try:
             if value is not None and isinstance(field, ForeignKey):

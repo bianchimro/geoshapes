@@ -42,6 +42,22 @@ from website.pagination import get_page_or_1, get_paginator_page
 #TODO: move to settings
 DATASET_OBJECTS_PER_PAGE = 100
 
+@login_required
+def private(request):
+    print "e", request.user
+    return render_to_response('website/private.html', 
+        {},
+        context_instance = RequestContext(request))
+
+
+
+def login(request):
+    return render_to_response('website/login.html', 
+        {},
+        context_instance = RequestContext(request))
+
+
+
 def index(request):
     
     return render_to_response('website/index.html', 
@@ -292,7 +308,53 @@ def dataset_geodata_ajax(request, descriptor_id):
     
     return response.as_http_response()
 
+
+def dataset_geodata_ajax_chunks(request, descriptor_id):
     
+    response = AjaxResponse()
+    
+    try:
+        descriptor  = DatasetDescriptor.objects.select_related().get(id=int(descriptor_id))
+    except Exception, e:
+        response.status = 404
+        response.error = str(e)
+        return response.as_http_response()
+    
+    datamodel = descriptor.dymodel
+
+    out = {}
+    
+    objs = datamodel.Dataset.objects.all()#.geojson()
+    
+#    paginator = Paginator(objs, DATASET_OBJECTS_PER_PAGE)
+    paginator = Paginator(objs, 30)
+    page = get_page_or_1(request)
+    dataset_page = get_paginator_page(paginator, page)
+    
+    num_pages = paginator.num_pages
+    has_next = dataset_page.has_next()
+    
+    serializer = GeoJSONSerializer()
+    out_objs = serializer.serialize(dataset_page.object_list, fields = datamodel.non_geo_fields)
+    
+    out = {}
+    out['rows'] = out_objs
+    out['num_pages'] = num_pages
+    out['has_next'] = has_next
+    if has_next:
+        out['next_page'] = page + 1
+        out['next_url'] = reverse("website.views.dataset_geodata_ajax_chunks", args=(descriptor_id,)) + "?page=" + str(page+1)
+    else:
+        out['next_page'] = None
+        out['next_url'] = None
+        
+    out['descriptor'] = instance_dict(descriptor, recursive=True, related_names=['items'], properties=['metadata'])
+    response.result = out
+    
+    return response.as_http_response()
+
+
+
     
 def dataset_table_view(request, descriptor_id):
     

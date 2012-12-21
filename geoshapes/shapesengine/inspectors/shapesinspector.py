@@ -11,7 +11,8 @@ from baseinspector import *
 
 TYPES_MAPPIG  = { 'OFTInteger' : 'integer',
                   'OFTString' : 'string',
-                  'OFTReal' : 'float'
+                  'OFTReal' : 'float',
+                  'OFTDate' : 'date'
     }
 
 class ShapesInspector(BaseInspector):
@@ -71,7 +72,7 @@ class ShapesInspector(BaseInspector):
         return out
     
     
-    def fix_geometry_type(self, geom, source_srid):
+    def fix_geometry_type(self, geom, source_srid=4326):
         """
         Convert polygons to multipolygons so all features are homogenous in the database.
         """
@@ -121,7 +122,9 @@ class ShapesInspector(BaseInspector):
             if source_srid_declared:
                 source_srid = int(source_srid_declared)
             else:
-                raise
+                pass
+                source_srid = 4326
+                #raise
                 
         
         for i, feature in enumerate(layer):

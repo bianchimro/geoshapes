@@ -16,6 +16,14 @@ DESCRIPTORS_TYPES_MAP = {
     'date' : { 'model': 'DateField', 'args' : (), 'kwargs': { 'null':True, 'blank':True }, 'parser': date},
     
     'Polygon' : { 'model': 'MultiPolygonField', 'args' : (), 'kwargs': { 'null':True, 'blank':True }, 'parser': str},
+    
+    #??
+    'LineString' : { 'model': 'LineStringField', 'args' : (), 'kwargs': { 'null':True, 'blank':True }, 'parser': str},
+    
+    'Point' : { 'model': 'PointField', 'args' : (), 'kwargs': { 'null':True, 'blank':True }, 'parser': str},
+
+#    'Point25D' : { 'model': 'PointField', 'args' : (), 'kwargs': { 'null':True, 'blank':True }, 'parser': str},    
+
 
 }
 

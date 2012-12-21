@@ -17,6 +17,7 @@ urlpatterns = patterns('',
     
     
     url(r'^shapesengine/', include('shapesengine.urls')),
+    url(r'', include('social_auth.urls')),
     url(r'', include('website.urls')),
     
     

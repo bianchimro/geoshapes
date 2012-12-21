@@ -50,27 +50,53 @@
     
         $(function(){
         
-            var data_url = '{% url "website.views.dataset_geodata_ajax" descriptor.id %}';
+            //ajaxutils.openModal('loadingBaseOpenLayers', {'body': 'Loading Openlayers'});
+            //ajaxutils.alertMessage("Loading base layers");
+            var data_url = '{% url "website.views.dataset_geodata_ajax_chunks" descriptor.id %}';
             var map = new OpenLayers.Map('map');
             var osm = new OpenLayers.Layer.OSM({});
             map.addLayer(osm);
             map.zoomToMaxExtent();    
+            //ajaxutils.alertMessage("Base layers loaded", 'alert-success');            
+            //ajaxutils.closeModal('loadingBaseOpenLayers');
             
             
-            
-        var addLayer = function(results){
-            console.log(results.features)
+        var createLayer = function(){
             var geojson_layer = new OpenLayers.Layer.Vector("GeoJSON", {
-                
+            });    
+            return layer;
+            
+        };
+        
+        
+        var addFeaturesToLayer = function(layer, features){
+
+            var geojson_format = new OpenLayers.Format.GeoJSON({
+                'internalProjection': map.baseLayer.projection,
+                'externalProjection': new OpenLayers.Projection("EPSG:4326")
             });
+
+            for(var i=0,n=features.length;i<n;i++){
+                var feat = features[i];
+                var fr = geojson_format.read(JSON.stringify(feat));
+                layer.addFeatures(fr);
+            }
+
+        
+        };
+        
+        var addLayer = function(features){
+            var geojson_layer = new OpenLayers.Layer.Vector("GeoJSON", {
+            });  
+    
             var geojson_format = new OpenLayers.Format.GeoJSON({
                 'internalProjection': map.baseLayer.projection,
                 'externalProjection': new OpenLayers.Projection("EPSG:4326")
             });
             
             
-            for(var i=0,n=results.features.length;i<n;i++){
-                var feat = results.features[i];
+            for(var i=0,n=features.length;i<n;i++){
+                var feat = features[i];
                 var fr = geojson_format.read(JSON.stringify(feat));
                 geojson_layer.addFeatures(fr);
             }
@@ -141,18 +167,69 @@
             $.ajax({
                 url : data_url,
                 type : 'GET',
+                async : false,
                 dataType : 'json',
                 success : function(response){
                     console.log(response);
-                    addLayer(JSON.parse(response.result.rows));
+                    addLayer(JSON.parse(response.result.rows).feaures);
                 
                 }
-                
-            
             });
         };
         
-        loadLayer();
+        
+        var loadChunks = function(url, callback, callbackstop){
+            
+            console.log("ch", url);
+            $.ajax({
+                url : url,
+                type : 'GET',
+                async : false,
+                dataType : 'json',
+                success : function(response){
+                    callback(response);
+                    if(response.result.next_url){
+                        console.log("ss",response.result.next_url);
+                        loadChunks(response.result.next_url, callback, callbackstop);
+                     } else {
+                        callbackstop(response);
+                     }
+                    
+                }
+            });
+        
+        
+        
+        }
+        
+        
+        var loadLayerChunks = function(){    
+            var geojson_layer = new OpenLayers.Layer.Vector("GeoJSON", {
+            });   
+            map.addLayer(geojson_layer);
+            
+            
+            var rows = [];
+            loadChunks(data_url,
+                function(response){
+                    //rows = rows.concat(JSON.parse(response.result.rows).features);
+                    addFeaturesToLayer(geojson_layer, JSON.parse(response.result.rows).features);
+                    geojson_layer.redraw();
+                },
+                function(response){
+                    map.zoomToExtent(geojson_layer.getDataExtent());
+                }
+            );
+            
+            
+        };
+        
+        
+        
+        ajaxutils.openModal('loading', {'body': '<p>Loading Dataset</p><img src="{{ STATIC_URL}}website/img/ajax-loader.gif"/>'});
+        loadLayerChunks();
+        ajaxutils.closeModal('loading');
+        //ajaxutils.alertMessage("Dataset loaded", 'alert-success');   
         
         });
     

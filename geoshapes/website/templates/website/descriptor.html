@@ -42,7 +42,9 @@
         <button class="btn btn-danger" data-bind="click: loadData">Reload data</button>
         <button class="btn btn-danger" data-bind="click: getRows">Show records</button>
         <a href="{% url "website.views.dataset_table_view" descriptor.id %}">View as table</a>
-        
+        {% if descriptor.source.source_class == 'ShapeSource' %}
+        <a href="{% url "website.views.dataset_map_view" descriptor.id %}">View as map</a>
+        {% endif %}        
         <div id="rows-container" data-bind="if: rows()">
             <table class="table table-condensed table-bordered-table-striped">
             <tbody>
@@ -104,7 +106,7 @@
             self.getTableRow = function(){
 
                 var out = $("<tr></tr>");
-                for(var field in self.metadata()){
+                for(var field in self.metadata().fields){
                     var item = $("<td></td>");
                     item.text(self.data[field]);
                     out.append(item);
@@ -253,7 +255,7 @@
             
             self.getTableHeader = ko.computed(function(){
                 var out = $("<tr></tr>");
-                for(var field in self.metadata()){
+                for(var field in self.metadata().fields){
                     var item = $("<th></th>");
                     item.text(field);
                     out.append(item);

@@ -92,7 +92,8 @@ class BaseInspector(object):
                 except ValueError:
                     toRemove.append(typeName)
                 except:
-                    raise
+                    toRemove.append(typeName)
+                    #raise
 
             for r in toRemove: 
                 del candidates[r]
