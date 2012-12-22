@@ -1,4 +1,31 @@
-# Modal dialog should handle confirm with no hassles
+# Formats page
+
+# Page to create dataset, button in datasets view
+
+# menus for logged user
+
+
+
+
+
+# table smart filter
+
+# dataset export
+
+# table export
+
+
+# map attributes
+
+# map edit
+
+
+# fields ordering
+
+# Visualizations
+
+
+# Modal dialog should handle confirm
 
 # Error messages should be propagated to modal dialogs
 

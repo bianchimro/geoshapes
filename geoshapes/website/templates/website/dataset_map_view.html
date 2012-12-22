@@ -205,7 +205,7 @@
         }
         
         
-        var loadLayerChunks = function(){    
+        var loadLayerChunks = function(callback){    
             var geojson_layer = new OpenLayers.Layer.Vector("GeoJSON", {
             });   
             map.addLayer(geojson_layer);
@@ -220,6 +220,7 @@
                 },
                 function(response){
                     map.zoomToExtent(geojson_layer.getDataExtent());
+                    callback();
                 }
             );
             
@@ -229,8 +230,10 @@
         
         
         ajaxutils.openModal('loading', {'body': '<p>Loading Dataset</p><img src="{{ STATIC_URL}}website/img/ajax-loader.gif"/>'});
-        loadLayerChunks();
-        ajaxutils.closeModal('loading');
+        loadLayerChunks(function(){
+            ajaxutils.closeModal('loading');
+        });
+        //
         //ajaxutils.alertMessage("Dataset loaded", 'alert-success');   
         
         });

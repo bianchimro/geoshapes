@@ -48,14 +48,18 @@ ajaxutils.openModal = function(modalName, options){
         '</div>'
       ].join('');
       
+      var tmp = $(tmpl);
+      tmp.modal();
+      //$(body).append(tmp);
 
-      $(tmpl).modal();
      ajaxutils.openModals[modalName] = true;
+     return tmp;
 }
 
 ajaxutils.closeModal = function(modalName){
     $('#modal-dialog-'+ modalName).modal('hide');
     delete ajaxutils.openModals[modalName];
-    //delete div!
 
+    //delete div!
+    //$('#modal-dialog-'+ modalName).remove();
 }

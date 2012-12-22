@@ -422,7 +422,7 @@ def dataset_table_view(request, descriptor_id):
     dataset_page = get_paginator_page(paginator, page)
     
     return render_to_response('website/dataset_table_view.html', 
-        {   'rows' : objs, 
+        {   #'rows' : objs, 
             'meta' : descriptor.metadata,
             'descriptor':descriptor,
             'paginator_page':dataset_page
