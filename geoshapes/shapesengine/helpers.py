@@ -16,7 +16,7 @@ import logging
 from south.db import db
 
 logger = logging.getLogger('shapesengine')
-
+HASH_CACHE_TEMPLATE = 'dynamic_model_hash_%s-%s'
 
 def unregister_from_admin(admin_site, model):
     " Removes the dynamic model from the given admin site "
@@ -232,4 +232,40 @@ def notify_model_change(model):
     logger.debug("Setting \"%s\" hash to: %s" % (model._meta.verbose_name, model._hash))
 
 
-HASH_CACHE_TEMPLATE = 'dynamic_model_hash_%s-%s'
+
+
+def get_model_size(model):
+    """
+    Gets the size in mbytes of a model table
+    """
+    table_name= model._meta.db_table
+    try:
+        result = db.execute("SELECT pg_total_relation_size('%s')" % table_name)
+        sz = int(result[0][0])
+        return float(sz) / ( 1024 * 1024)
+    except:
+        pass
+        
+    return None
+    
+    
+def estimate_row_size(model):
+
+    total_size = get_model_size(model)
+    if not total_size:
+        return None
+    
+    num_objs = model.objects.all().count()
+    if not num_objs:
+        return None
+        
+    try:
+        return total_size / num_objs
+    except:
+        return None
+    
+    
+    
+    
+    
+    

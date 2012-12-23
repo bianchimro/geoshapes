@@ -9,6 +9,13 @@
             {{ descriptor.source.name }}
             </td>
             <td>
+                {{ descriptor.num_items }}
+            </td>
+            <td>
+                {{ descriptor.table_size }}
+            </td>
+
+            <td>
                 <a class="btn btn-mini btn-info" href="{% url "website.views.descriptor" descriptor.id %}">View</a>
             </td>
             

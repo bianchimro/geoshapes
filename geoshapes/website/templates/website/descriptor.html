@@ -156,6 +156,7 @@
                 for(var i=0,n=obj.items.length;i<n;i++){
                     
                     var descriptor = obj.items[i];
+                    console.log("d", descriptor);
                     var item = new DescriptorItem({name:descriptor.name, type:descriptor.type, id:descriptor.id });           
                     self.descriptorItems.push(item);
                     

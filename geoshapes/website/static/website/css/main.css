@@ -11,6 +11,26 @@
 
 
 
+.featureboxes { margin-top:20px;}
+.featurebox {
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 5px;
+    border: solid #ddd 1px;
+    padding:10px;
+}
+
+.featurebox .content{
+
+}
+
+
+.featurebox h2{
+    text-align:center;
+
+}
+
+
 
 
 

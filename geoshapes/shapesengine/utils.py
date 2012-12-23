@@ -7,14 +7,19 @@ from django.http import HttpResponse
 
 GEOM_FIELDS = ['PointField', 'MultiPointField', 'PolygonField', 'MultiPolygonField', 'LineStringField', 'MultiLineStringField',
             'GeometryCollectionField']
+            
+DATETIME_FIELDS = ['DateTimeField', 'DateField']
 
 
 def is_geom_field(field_type):
-    #print "xxx", field_type
     return field_type.upper() in [x.upper() for x in GEOM_FIELDS]
+    
+def is_datetime_field(field_type):
+    return field_type.upper() in [x.upper() for x in DATETIME_FIELDS]
+    
 
 
-def instance_dict(instance, key_format=None, recursive=False, related_names=[], properties=[], check_json=True, ignore_fields=[]):
+def instance_dict(instance, key_format=None, recursive=False, related_names=[], properties=[], recursiveProperties=False, check_json=True, ignore_fields=[]):
     
     """
     Returns a dictionary containing field names and values for the given instance
@@ -35,7 +40,11 @@ def instance_dict(instance, key_format=None, recursive=False, related_names=[], 
                 if not recursive:
                     value = value._get_pk_val()
                 else:
-                    value = instance_dict(value)
+                    if recursiveProperties:
+                        value = instance_dict(value,key_format=key_format, recursive=False, properties=properties)
+                    else:
+                        value = instance_dict(value)
+                        
             json_val = json.dumps(value, cls=DjangoJSONEncoder)
             d[key(attr)] = value
         except Exception,e:
@@ -63,6 +72,7 @@ def instance_dict(instance, key_format=None, recursive=False, related_names=[], 
         
     
     for prop in properties:
+        print "prop", prop, instance
         value = getattr(instance, prop, None)
         d[key(prop)] = value 
     

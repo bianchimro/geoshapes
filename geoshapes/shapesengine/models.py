@@ -81,11 +81,6 @@ def generate_fields_from_meta(descriptor, meta):
 
 
 
-
-
-
-
-
 class DyModel(models.Model):
 
     """
@@ -187,6 +182,17 @@ class DyField(models.Model):
         field_type = getattr(models, self.type)
         field = field_type(*self.args, **self.kwargs)
         return field
+    
+    @property
+    def is_geo_field(self):
+       return self.type in utils.GEOM_FIELDS
+        
+    @property    
+    def is_datetime_field(self):
+        return self.type in utils.DATETIME_FIELDS
+
+        
+    
 
     def save(self, *args, **kwargs):
         if not self.label:
@@ -397,6 +403,27 @@ class DatasetDescriptor(models.Model):
     @property
     def has_dymodel_with_table(self):
         return bool(self.dymodel) and self.dymodel.has_table
+        
+    @property
+    def num_items(self):
+        if self.has_dymodel_with_table:
+            return self.dymodel.Dataset.objects.all().count()
+        return None
+    
+    @property
+    def table_size(self):
+        if self.has_dymodel_with_table:
+            return helpers.get_model_size(self.dymodel.Dataset)
+        return None
+        
+        
+    @property
+    def row_size(self):
+        if self.has_dymodel_with_table:
+            return helpers.estimate_row_size(self.dymodel.Dataset)
+        return None
+
+        
     
         
     @property
@@ -517,8 +544,7 @@ class DatasetDescriptorItem(models.Model):
 
     def get_field_name(self):
         return slugify(self.name).replace("-", "_")
-
-
+   
 #creating stored models
 from shapesengine.dynamic_models import build_existing_dataset_models
 """

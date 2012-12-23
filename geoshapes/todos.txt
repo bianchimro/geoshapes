@@ -5,10 +5,11 @@
 # menus for logged user
 
 
-
-
+# fields ordering (dataset page)
 
 # table smart filter
+
+# queryset export feature
 
 # dataset export
 
@@ -20,7 +21,6 @@
 # map edit
 
 
-# fields ordering
 
 # Visualizations
 
@@ -39,4 +39,6 @@ ad dataset without a source)
 # Celery or cueless should be used to manage long running ajax calls
 
 
+
+#FUTURE: a dataset should be a set of tables
 
