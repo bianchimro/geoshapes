@@ -542,8 +542,14 @@ class DatasetDescriptorItem(models.Model):
     name = models.CharField(max_length=200)
     type = models.CharField(max_length=200, choices=DESCRIPTOR_TYPE_CHOICES)
 
+    
+    class Meta:
+        ordering = ['order']
+    
     def get_field_name(self):
         return slugify(self.name).replace("-", "_")
+        
+    
    
 #creating stored models
 from shapesengine.dynamic_models import build_existing_dataset_models

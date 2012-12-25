@@ -11,40 +11,41 @@
             <p>
                 This dataset was automatically generated from an uploaded file.
             </p>
+            <h2>Structure</h2>
             <div id="descriptor-container">
+                <button class="btn btn-small" data-bind="visible: !changingOrder(), click: changeFieldsOrder">Change field order</button>
+                <button class="btn btn-small" data-bind="visible: changingOrder(), click: stopChangeFieldsOrder">Stop changing</button>
+                <button class="btn btn-small btn-danger" data-bind="visible: changingOrder(), click: getFieldsOrder">Save field order</button>
                 <form>
-                    <table class="table">
+                    <table class="table table-bordered">
                         <tr>
-                            <td>Name</td>
+                            <td data-bind="visible: changingOrder()"></td>
+                            <td>Field name</td>
                             <td>Type</td>
-                            <td></td>
                         </tr>
-                        <tbody data-bind="foreach: descriptorItems()">
+                        <tbody id="structure-table-body">
+                            {% for item in descriptor.items.all %}
+                            <tr class="descriptoritem" id="field_{{item.id}}" data-id="{{item.id}}">
+                            <td class="handle" data-bind="visible: changingOrder()"><i class="icon-magnet"></i></td>
                             <td>
-                                <span data-bind="text:name">
+                                {{ item.name }}
                             </td>
                             <td>
-                                <span data-bind="text:type">
-                            </select>
+                                {{ item.type }}
                             </td>
-                                            
+                            </tr>                
+                            {% endfor %}
                         </tbody>
                     </table>
                 </form>
             </div>
         </div>
     </div>
-    <div class="row">
-        <div class="span12">
-            <h3>Operations</h3>
-                <button class="btn btn-danger" data-bind="click: loadData">Reload data</button>
-                <button class="btn btn-danger" data-bind="click: dropDescriptor">Delete this dataset</button>
-        </div>
-    </div>
+    
 
     <div class="row">
         <div class="span12">
-            <h3>Data</h3>
+            <h3>Browse</h3>
             <button class="btn btn-info" data-bind="click: getRows">Preview records</button>
             <a class="btn" href="{% url "website.views.dataset_table_view" descriptor.id %}">View as table</a>
             {% if descriptor.source.source_class == 'ShapeSource' %}
@@ -63,11 +64,38 @@
         </div>
     </div>
     
+    
+
+    <div class="row">
+        <div class="span12">
+            <h3>Export</h3>
+        </div>
+    </div>
+
+
+    
     <div class="row">
         <div class="span12">
             <h3>Visualizations</h3>
         </div>
     </div>
+    
+    <div class="row">
+        <div class="span12">
+            <div class="">
+            <h3>Operations</h3>
+                <p>
+                    <button class="btn btn-danger" data-bind="click: loadData">Reload data</button>
+                    Restore data from the original data source. <b>This will destroy any change!</b>
+                </p>
+                <p>
+                <button class="btn btn-danger" data-bind="click: dropDescriptor">Delete this dataset</button>
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    
 </div>
 
 
@@ -75,6 +103,17 @@
 
 
 {% block extra_body %}
+
+
+ <script>
+    $(function() {
+        
+        
+    });
+    </script>
+
+
+
 <script>
 
     $(function(){
@@ -85,6 +124,7 @@
         var load_data_url = '{{load_data_url|safe}}';
         var dataset_data_url = '{{dataset_data_url|safe}}';
         var initial_descriptor = JSON.parse('{{descriptor_json|safe}}');
+        var descriptoritems_order_ajax_url = '{{descriptoritems_order_ajax_url|safe}}';
         
         var descriptor_drop_url = '{{descriptor_drop_url|safe}}';
     
@@ -140,6 +180,8 @@
             self.allowed_types = allowed_types;
             self.allowed_names = allowed_names;
             
+            self.changingOrder = ko.observable(false);
+            
             self.addItem = function(){
                 var item = new DescriptorItem();
                 self.descriptorItems.push(item);
@@ -180,6 +222,64 @@
                 data.items = JSON.stringify(items)
                 return data;
             };
+            
+            //#TODO: PARAMETRIZE SELECTOR
+            self.prepareSortable = function(){
+                $( "#structure-table-body" ).sortable({ handle: ".handle" });
+                $( "#structure-table-body" ).sortable('disable');
+            };
+            
+            
+            //#TODO: PARAMETRIZE SELECTOR           
+            self.getFieldsOrder = function(){
+            
+                var fields = [];
+                $("#structure-table-body > .descriptoritem").each(
+                    function(index, item){
+//                        console.log(index, item);
+                        var it = { order: index, id: $(item).attr('data-id')}
+                        fields.push(it);
+                    }
+                );
+                
+                console.log(fields);
+                
+                $.ajax({
+                
+                    url : descriptoritems_order_ajax_url,
+                    data : { items : JSON.stringify(fields) },
+                    type : 'POST',
+                    dataType : 'json',
+                    success : function(response){
+                        console.log("frr", response);
+                        if(response.status == 200){
+                            ajaxutils.alertMessage("Fields order saved", "alert-succes");
+                            self.stopChangeFieldsOrder();
+                        }
+                        else{
+                            ajaxutils.alertMessage("Could not save fields order:" + response.error, "alert-error");
+                        }
+                    }
+                
+                });
+            
+            
+            };
+            
+            self.changeFieldsOrder = function(){
+                $( "#structure-table-body" ).sortable('enable');
+                $( "#structure-table-body" ).disableSelection();
+                self.changingOrder(true)
+            };
+            
+            
+            self.stopChangeFieldsOrder = function(){
+                $( "#structure-table-body" ).enableSelection();
+                $( "#structure-table-body" ).sortable('disable');
+                self.changingOrder(false)
+            };
+            
+            
             
             self.load = function(){
                 ajaxutils.openModal('descriptorLoading', {'body': '<p>Loading Dataset</p><img src="{{ STATIC_URL}}website/img/ajax-loader.gif"/>'});
@@ -324,7 +424,9 @@
             };
             
             
-            self.load();
+            //self.load();
+            self.prepareSortable();
+            
             
         
         };

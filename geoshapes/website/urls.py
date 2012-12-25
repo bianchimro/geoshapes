@@ -16,9 +16,12 @@ urlpatterns = patterns('website.views',
     url(r'^source/(?P<source_id>\d+)/$', 'source', name="source"),
     url(r'^load_source_data_ajax/(?P<source_id>\d+)/$', 'load_source_data_ajax', name="load_source_data_ajax"),
     
-    url(r'^descriptors/$', 'descriptors', name='descriptors'),
-    url(r'^descriptor/(?P<descriptor_id>\d+)/$', 'descriptor', name="descriptor"),
 
+    url(r'^descriptor/(?P<descriptor_id>\d+)/$', 'descriptor', name="descriptor"),
+    
+    url(r'^descriptors/$', 'descriptors', name='descriptors'),    
+    url(r'^descriptoritems_order_ajax/$', 'descriptoritems_order_ajax', name='descriptoritems_order_ajax'),    
+    
     url(r'^add_source_descriptor_csv/(?P<source_id>\d+)/$', 'add_source_descriptor_csv', name="add_source_descriptor_csv"),
     url(r'^add_source_descriptor_shape/(?P<source_id>\d+)/$', 'add_source_descriptor_shape', name="add_source_descriptor_shape"),
     

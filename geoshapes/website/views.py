@@ -122,11 +122,13 @@ def descriptor(request, descriptor_id):
     load_data_url = reverse('website.views.load_data_ajax', args=(descriptor.id,))
     dataset_data_url = reverse('website.views.dataset_data_ajax', args=(descriptor.id,))
     descriptor_drop_url = reverse("website.views.drop_descriptor_ajax", args=(descriptor_id,))
+    descriptoritems_order_ajax_url = reverse("website.views.descriptoritems_order_ajax")
     
 
     descriptor_json = json.dumps(instance_dict(descriptor, recursive=True),cls=DjangoJSONEncoder)
     allowed_types = json.dumps(DESCRIPTORS_TYPES_MAP.keys(),cls=DjangoJSONEncoder)
     allowed_names = json.dumps(source.get_fields(),cls=DjangoJSONEncoder)
+    
     
     
     return render_to_response('website/descriptor.html', 
@@ -137,11 +139,37 @@ def descriptor(request, descriptor_id):
             'load_data_url' : load_data_url,
             'dataset_data_url' : dataset_data_url,
             'descriptor_resource_url' : descriptor_resource_url,
-            'descriptor_drop_url' : descriptor_drop_url
+            'descriptor_drop_url' : descriptor_drop_url,
+            'descriptoritems_order_ajax_url' : descriptoritems_order_ajax_url
         },
         context_instance = RequestContext(request))
 
 
+
+def descriptoritems_order_ajax(request):
+    response = AjaxResponse()
+    
+ 
+    if request.method == 'POST':
+        try:
+            items_json = request.POST['items']
+            items = json.loads(items_json)
+            print items
+            for item in items:
+                id = int(item['id'])
+                order = int(item['order'])
+                instance = DatasetDescriptorItem.objects.get(pk=id)
+                instance.order = order
+                instance.save()
+                
+            
+        except Exception, e:
+            response.error = str(e)
+            response.status = 500
+
+    return response.as_http_response()
+ 
+    
 
 
 
