@@ -32,6 +32,7 @@ from shapesengine.utils import instance_dict, collect_queryset_rows, AjaxRespons
 from shapesengine.shapeutils import ShapeChecker
 
 from shapesengine.models import *
+from shapesengine.mappings import *
 
 from django.core.paginator import Paginator
 from website.pagination import get_page_or_1, get_paginator_page
@@ -441,6 +442,8 @@ def dataset_geodata_ajax_chunks(request, descriptor_id):
 def dataset_table_view(request, descriptor_id):
     
     descriptor  = DatasetDescriptor.objects.select_related().get(id=int(descriptor_id))
+    descriptor_dict = instance_dict(descriptor, recursive=True, related_names=['items'], properties=['metadata'])
+    
     datamodel = descriptor.dymodel
     
     objs = datamodel.Dataset.objects.all()
@@ -453,7 +456,9 @@ def dataset_table_view(request, descriptor_id):
         {   #'rows' : objs, 
             'meta' : descriptor.metadata,
             'descriptor':descriptor,
-            'paginator_page':dataset_page
+            'paginator_page':dataset_page,
+            'descriptor_dict' : json.dumps(descriptor_dict),
+            'filters_map' : json.dumps(FILTERS_TYPES_MAP)
         },
         context_instance = RequestContext(request))
 
@@ -599,5 +604,20 @@ def add_shape_source_ajax(request):
         
     return response.as_http_response()
         
+
+
+def filters_map_ajax(request):
+    
+    response = AjaxResponse()
+    try:
+        response.result = FILTERS_TYPES_MAP
+    
+    except Exception, e:
+            response.status = 500
+            response.error = str(e)
+    
+    return response.as_http_response()
+
+
 
 

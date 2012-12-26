@@ -11,6 +11,23 @@
         <div class="span12">
         <h2>Dataset</h2>
         <a href="{% url "website.views.descriptor" descriptor.id %}">Back to dataset</a>
+        
+        <div id="filter-container">
+            <button class="btn btn-small btn-primary" data-bind="click: addFilter">Add filter</button>
+            <div data-bind="foreach: filters()">
+                <div>
+                    <select data-bind="options: $root.fieldNames()"></select>
+                    <select></select>
+                    <input type="text">
+                    <span class="close">x</span>
+                </div>
+            </div>
+            <button class="btn btn-small btn-primary" data-bind="click: refresh">Refresh</button>
+        
+        </div>
+        
+        
+        
         <div style="clear:both">
            {% include "website/paginator.html" %}
         </div>
@@ -39,4 +56,82 @@
 </div>
 
 
+{% endblock %}
+
+{% block extra_body %}
+    <script>
+        $(function(){
+        
+            var filters_map = JSON.parse('{{filters_map|safe}}');
+            var descriptor = JSON.parse('{{descriptor_dict|safe}}');
+            
+            console.log(filters_map);
+            console.log(descriptor);
+            
+            
+            var FilterManagerView = function(){
+        
+                var self=this;
+                self.filters = ko.observableArray([]);
+                self.fieldNames = ko.observableArray([]);
+                
+                
+                self.bootstrapFields = function(){
+                    var meta = descriptor.metadata;
+                    console.log(meta);
+                    var fieldNames = [];
+                    var fieldsOperators = {}
+                    for(var fieldName in meta.fields){
+                        var fieldType = meta.fields[fieldName];
+                        var filters = filters_map[fieldType];
+                        console.log("ee", fieldName, fieldType);
+                        if(!filters){
+                            continue;
+                        };
+                        if(filters.length){
+                            fieldNames.push(fieldName);
+                            fieldsOperators[fieldName] = [];
+                            for(var i=0,n=filters.length;i<n;i++){
+                                var filter = filters[i];
+                                fieldsOperators[fieldName].push(filter.operator);
+                            }
+                        
+                        }
+                    
+                    }
+                    
+                    self.fieldNames(fieldNames);
+                    self.fieldsOperators = fieldsOperators;
+                
+                };
+                
+                self.addFilter = function(){
+                    self.filters.push({});
+                
+                };
+                
+                
+                self.refresh = function(){
+                    console.log("refresh");
+                };
+                
+                self.bootstrapFields();
+            
+                
+        
+            };
+            
+            
+            
+            
+            var filterManagerView = new FilterManagerView();
+            ko.applyBindings(filterManagerView, document.getElementById('filter-container'));
+            
+            
+        });
+        
+        
+        
+        
+    </script>
 {% endblock %}

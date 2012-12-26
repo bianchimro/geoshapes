@@ -41,6 +41,6 @@ urlpatterns = patterns('website.views',
     url(r'^$', 'index'),
     
 
-
+    url(r'^filters_map_ajax/$', 'filters_map_ajax', name='filters_map_ajax'),
 
 )

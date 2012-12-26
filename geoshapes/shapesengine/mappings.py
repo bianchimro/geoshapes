@@ -17,13 +17,23 @@ DESCRIPTORS_TYPES_MAP = {
     
     'Polygon' : { 'model': 'MultiPolygonField', 'args' : (), 'kwargs': { 'null':True, 'blank':True }, 'parser': str},
     
-    #??
     'LineString' : { 'model': 'LineStringField', 'args' : (), 'kwargs': { 'null':True, 'blank':True }, 'parser': str},
     
     'Point' : { 'model': 'PointField', 'args' : (), 'kwargs': { 'null':True, 'blank':True }, 'parser': str},
 
+#??
 #    'Point25D' : { 'model': 'PointField', 'args' : (), 'kwargs': { 'null':True, 'blank':True }, 'parser': str},    
 
 
 }
 
+
+
+FILTERS_TYPES_MAP = {
+
+    'text' : [],
+    'string' : [{'name' : 'contains', 'operator' : 'contains' }, {'name' : 'startswith', 'operator' : 'startswith'}],
+    'integer' : [],
+    'float' : [],
+    'date' : []
+}
