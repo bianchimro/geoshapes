@@ -503,6 +503,8 @@ class DatasetDescriptor(models.Model):
         
         #klass = datamodel.generate_model()
         Dataset.objects.all().delete()
+        loopcounter = 0
+        instances_to_save = []
         for d in data:
             kwargs = {}
             for f in fields:
@@ -522,7 +524,17 @@ class DatasetDescriptor(models.Model):
                     not_none_kwargs[k] = v
             
             instance = Dataset(**not_none_kwargs)
-            instance.save()
+            instances_to_save.append(instance)
+            loopcounter += 1
+            #instance.save()
+            
+            if loopcounter % 5000 == 0:
+                loopcounter = 0
+                Dataset.objects.bulk_create(instances_to_save)
+                instances_to_save = []
+                
+        if len(instances_to_save):
+            Dataset.objects.bulk_create(instances_to_save)
         
         return Dataset
         
