@@ -1,3 +1,6 @@
+#Bugs
+- Shape import not working
+
 ## New features
 
 - table smart filter
