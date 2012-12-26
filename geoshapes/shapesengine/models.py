@@ -36,7 +36,7 @@ from shapesengine.inspectors.csvinspector import CSVInspector
 
 DEFAULT_APP_NAME = 'shapesengine'
 DEFAULT_SHAPES_PATH = os.path.join(settings.MEDIA_ROOT, "shapes_uploads")
-
+BULK_IMPORT_BATCH_SIZE = 5000
 
 #TODO: add classes for automatic creation of descriptors
 #TODO: add ShapeFile source
@@ -528,7 +528,7 @@ class DatasetDescriptor(models.Model):
             loopcounter += 1
             #instance.save()
             
-            if loopcounter % 5000 == 0:
+            if loopcounter % BULK_IMPORT_BATCH_SIZE == 0:
                 loopcounter = 0
                 Dataset.objects.bulk_create(instances_to_save)
                 instances_to_save = []
