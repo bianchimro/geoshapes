@@ -448,6 +448,23 @@ def dataset_table_view(request, descriptor_id):
     
     objs = datamodel.Dataset.objects.all()
     
+    
+    if 'filters' in request.GET:
+        raw_str = request.GET['filters']
+        print "filters", raw_str
+        if len(raw_str.replace(" ", '')) > 0:
+           pieces = raw_str.split("+")
+           kwargs = {}
+           for p in pieces:
+               pp = p.split("=")
+               key_name = pp[0]
+               value = pp[1]
+               kwargs[key_name] = value
+               
+           print kwargs
+           objs = objs.filter(**kwargs)
+    
+    
     paginator = Paginator(objs, DATASET_OBJECTS_PER_PAGE)
     page = get_page_or_1(request)
     dataset_page = get_paginator_page(paginator, page)

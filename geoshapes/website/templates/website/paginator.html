@@ -1,3 +1,4 @@
+{% load utiltags %}
 <div class="navbar">
 
 <div class="nav-collapse">
@@ -5,13 +6,13 @@
   <ul>
   
     {% if paginator_page.has_previous %}
-        <li><a href="?page={{ paginator_page.previous_page_number }}">&lt;</a></li>
+        <li><a href="{% add_get page=paginator_page.previous_page_number %}">&lt;</a></li>
     {% endif %}    
       <li class="active">
         <a href="#">Page {{ paginator_page.number }} of {{ paginator_page.paginator.num_pages }}</a>
       </li>
      {% if paginator_page.has_next %}
-        <li><a href="?page={{ paginator_page.next_page_number }}">&gt;</a></li>
+        <li><a href="{% add_get page=paginator_page.next_page_number %}">&gt;</a></li>
     {% endif %}  
   
   </ul>
@@ -24,7 +25,7 @@
 
     {% if paginator_page.number > 3 %}
     <li>
-      <a href="?page=1">1</a>
+      <a href="{% add_get page=1 %}">1</a>
     </li>
     <li class="">
       <a>...</a>
@@ -33,12 +34,12 @@
 
     {% if paginator_page.number > 2 %}
     <li>
-      <a href="?page={{ paginator_page.number|add:"-2" }}">{{ paginator_page.number|add:"-2"}}</a>
+      <a href="{% add_get page=paginator_page.number|add:"-2" %}">{{ paginator_page.number|add:"-2"}}</a>
     </li>
     {% endif %}
     {% if paginator_page.number > 1 %}
     <li>
-      <a href="?page={{ paginator_page.number|add:"-1" }}">{{ paginator_page.number|add:"-1"}}</a>
+      <a href="{% add_get page=paginator_page.number|add:"-1" %}">{{ paginator_page.number|add:"-1"}}</a>
     </li>
     {% endif %}
 
@@ -48,12 +49,12 @@
 
     {% if paginator_page.paginator.num_pages > paginator_page.number %}
     <li>
-      <a href="?page={{ paginator_page.number|add:"1" }}">{{ paginator_page.number|add:"1"}}</a>
+      <a href="{% add_get page=paginator_page.number|add:"1" %}">{{ paginator_page.number|add:"1"}}</a>
     </li>
     {% endif %}
     {% if paginator_page.paginator.num_pages > paginator_page.number|add:"1" %}
     <li>
-      <a href="?page={{ paginator_page.number|add:"2" }}">{{ paginator_page.number|add:"2"}}</a>
+      <a href="{% add_get page=paginator_page.number|add:"2" %}">{{ paginator_page.number|add:"2"}}</a>
     </li>
     {% endif %}
 
@@ -62,7 +63,7 @@
       <a>...</a>
     </li>
     <li>
-      <a href="?page={{paginator_page.paginator.num_pages}}">{{paginator_page.paginator.num_pages}}</a>
+      <a href="{% add_get page=paginator_page.paginator.num_pages %}">{{paginator_page.paginator.num_pages}}</a>
     </li>
     {% endif %}
  

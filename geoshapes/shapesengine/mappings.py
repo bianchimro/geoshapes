@@ -31,9 +31,9 @@ DESCRIPTORS_TYPES_MAP = {
 
 FILTERS_TYPES_MAP = {
 
-    'text' : [],
+    'text' : [{'name' : 'contains', 'operator' : 'contains' }, {'name' : 'startswith', 'operator' : 'startswith'}],
     'string' : [{'name' : 'contains', 'operator' : 'contains' }, {'name' : 'startswith', 'operator' : 'startswith'}],
-    'integer' : [],
+    'integer' : [{'name' : 'greater than', 'operator' : 'gt' }, {'name' : 'less than', 'operator' : 'lt'}],
     'float' : [],
     'date' : []
 }

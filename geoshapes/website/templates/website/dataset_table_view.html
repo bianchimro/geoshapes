@@ -16,10 +16,10 @@
             <button class="btn btn-small btn-primary" data-bind="click: addFilter">Add filter</button>
             <div data-bind="foreach: filters()">
                 <div>
-                    <select data-bind="options: $root.fieldNames()"></select>
-                    <select></select>
-                    <input type="text">
-                    <span class="close">x</span>
+                    <select data-bind="options: fieldNames, value: fieldName"></select>
+                    <select  data-bind="options: operators, value: operator"></select>
+                    <input type="text" data-bind="value:value"/>
+                    <span class="close" data-bind="click: $root.deleteFilter">x</span>
                 </div>
             </div>
             <button class="btn btn-small btn-primary" data-bind="click: refresh">Refresh</button>
@@ -69,6 +69,38 @@
             console.log(descriptor);
             
             
+            var FilterView = function(options){
+                var options = options || {};
+                var self = this;
+                self.fieldName = ko.observable(options.fieldName || null);
+                self.operator = ko.observable(options.operator || null);
+                self.value = ko.observable(options.value || null);
+                
+                self.fieldNames = options.fieldNames || [];
+                self.fieldsOperators = options.fieldsOperators || {};
+                
+                self.operators = ko.computed(function(){
+                    return self.fieldsOperators[self.fieldName()] || [];
+                
+                });
+                
+                
+                self.getQuery = function(){
+                    var v= self.value()
+                    if(v === '' || v === null){
+                        return null;
+                    }
+                
+                    query = self.fieldName() + "__" + self.operator() + "=" + self.value();
+                    return query;
+                
+                }
+                
+                
+                
+            
+            };
+            
             var FilterManagerView = function(){
         
                 var self=this;
@@ -84,7 +116,6 @@
                     for(var fieldName in meta.fields){
                         var fieldType = meta.fields[fieldName];
                         var filters = filters_map[fieldType];
-                        console.log("ee", fieldName, fieldType);
                         if(!filters){
                             continue;
                         };
@@ -105,17 +136,83 @@
                 
                 };
                 
-                self.addFilter = function(){
-                    self.filters.push({});
+                self.bootstrapFilters = function(){
+                    var uri = new Uri(window.location);
+                    var filtersStr = uri.getQueryParamValue('filters');
+
+                    if(!filtersStr){
+                        return;
+                    }
+                    
+                    var filters = filtersStr.split("%2B");
+                    for(var i=0,n=filters.length;i<n;i++){
+                        var filter = filters[i];
+                        var pp = filter.split("%3D");
+                        var ppp = pp[0].split("__");
+                        var fieldName = ppp[0];
+                        var operator = ppp[1];
+                        var value = pp[1];
+                        var f = new FilterView({
+                                        fieldNames : self.fieldNames(), 
+                                        fieldsOperators : self.fieldsOperators, 
+                                        fieldName:fieldName,
+                                        operator: operator,
+                                        value:value
+                                        });
+                    self.filters.push(f);    
+                    }
+                    
                 
                 };
                 
+                self.addFilter = function(){
+                    var f = new FilterView({fieldNames : self.fieldNames(), fieldsOperators : self.fieldsOperators});
+                    self.filters.push(f);
+                
+                };
+                
+                self.deleteFilter = function(item){
+                    console.log("delete", item);
+                    var pos = self.filters().indexOf(item);
+                    var filters = self.filters();
+                    filters.splice(pos, 1);
+                    console.log("p", pos, self.filters());
+                    self.filters(filters);
+                
+                }
+                
+                
+                self.getQuery= function (){
+                    var filters = self.filters();
+                    queries = [];
+                    for(var i=0,n=filters.length;i<n;i++){
+                        var filter = filters[i];
+                        var q = filter.getQuery();
+                        if(q){
+                            queries.push(q);
+                        }
+                    
+                    }
+                    var query = queries.join("+");
+                    return query;
+                
+                
+                };
                 
                 self.refresh = function(){
                     console.log("refresh");
+                    var query = self.getQuery();
+                    //todo: handle pagination
+                    var uri = new Uri(window.location).replaceQueryParam('filters', query)
+                    console.log("i", uri.toString());                  
+                    window.location = uri.toString();
+                    
                 };
                 
                 self.bootstrapFields();
+                self.bootstrapFilters();
+                
+                
             
                 
         
