@@ -1,4 +1,4 @@
-## Features
+## New features
 
 - table smart filter
 - queryset export feature
@@ -6,10 +6,11 @@
 - table export
 - map attributes
 - map edit
-- celery or cueless should be used to manage long running ajax calls
-- public vs private
 - Visualizations
-- public vs private datasets
+- In the datasetdescriptor model ,source should be optional (it should be possibile to create a dataset without a source)
+- Celery or cueless should be used to manage long running ajax calls: 
+  
+  https://zapier.com/blog/2012/01/30/async-celery-example-why-and-how/
 
 
 
@@ -30,6 +31,5 @@
 - download bootswatches
 
 ## FUTURE
-- In the datasetdescriptor model ,source should be optional (it should be possibile to create a dataset without a source)
 - a dataset should be a set of tables
 - enable relations between tables
