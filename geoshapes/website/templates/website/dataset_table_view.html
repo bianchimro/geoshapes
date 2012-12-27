@@ -22,8 +22,12 @@
                     <span class="close" data-bind="click: $root.deleteFilter">x</span>
                 </div>
             </div>
-            <button class="btn btn-small btn-primary" data-bind="click: refresh">Refresh</button>
+            <button class="btn btn-small btn-primary" data-bind="visible: filters().length>0, click: refresh">Refresh</button>
         
+        </div>
+        
+        <div id="export-container">
+            <a class="btn" href="{% url "website.views.export_dataset" descriptor.id %}?filters={{request.GET.filters}}">Export to csv</a>
         </div>
         
         

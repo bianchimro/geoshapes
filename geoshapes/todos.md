@@ -3,10 +3,10 @@
 
 ## New features
 
-- table smart filter
-- queryset export feature
-- dataset export
-- table export
+- table smart filter #ok
+- queryset export feature #basic ok
+- dataset export #basic ok
+- table export #basic ok
 - map attributes
 - map edit
 - Visualizations

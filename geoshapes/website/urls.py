@@ -18,6 +18,8 @@ urlpatterns = patterns('website.views',
     
 
     url(r'^descriptor/(?P<descriptor_id>\d+)/$', 'descriptor', name="descriptor"),
+    url(r'^export_dataset/(?P<descriptor_id>\d+)/$', 'export_dataset', name="export_dataset"),
+    
     
     url(r'^descriptors/$', 'descriptors', name='descriptors'),    
     url(r'^descriptoritems_order_ajax/$', 'descriptoritems_order_ajax', name='descriptoritems_order_ajax'),    

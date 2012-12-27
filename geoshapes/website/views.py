@@ -448,10 +448,9 @@ def dataset_table_view(request, descriptor_id):
     
     objs = datamodel.Dataset.objects.all()
     
-    
+    #todo: make helper
     if 'filters' in request.GET:
         raw_str = request.GET['filters']
-        print "filters", raw_str
         if len(raw_str.replace(" ", '')) > 0:
            pieces = raw_str.split("+")
            kwargs = {}
@@ -461,7 +460,6 @@ def dataset_table_view(request, descriptor_id):
                value = pp[1]
                kwargs[key_name] = value
                
-           print kwargs
            objs = objs.filter(**kwargs)
     
     
@@ -622,7 +620,37 @@ def add_shape_source_ajax(request):
     return response.as_http_response()
         
 
+from shapesengine.exporter import CSVExporter
+def export_dataset(request, descriptor_id):
 
+    descriptor  = DatasetDescriptor.objects.select_related().get(id=int(descriptor_id))
+    descriptor_dict = instance_dict(descriptor, recursive=True, related_names=['items'], properties=['metadata'])
+
+    datamodel = descriptor.dymodel
+    objs = datamodel.Dataset.objects.all()
+
+    #todo: make helper    
+    if 'filters' in request.GET:
+        raw_str = request.GET['filters']
+        if len(raw_str.replace(" ", '')) > 0:
+           pieces = raw_str.split("+")
+           kwargs = {}
+           for p in pieces:
+               pp = p.split("=")
+               key_name = pp[0]
+               value = pp[1]
+               kwargs[key_name] = value
+               
+           objs = objs.filter(**kwargs)
+    
+    #todo: get the right exporter based on request params
+    exporter = CSVExporter(descriptor, objs)
+    return exporter.get_response("dataset_" + str(descriptor.id) + ".csv")
+
+
+
+
+##TODO: exposes filter.. useless right now
 def filters_map_ajax(request):
     
     response = AjaxResponse()
