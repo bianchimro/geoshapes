@@ -3,11 +3,11 @@
 
 ## New features
 
-- table smart filter #ok
+- table smart filter #ok - complete filter and use name
 - queryset export feature #basic ok
 - dataset export #basic ok
 - table export #basic ok
-- map attributes
+- map attributes #ok, in popup
 - map edit
 - Visualizations
 - In the datasetdescriptor model ,source should be optional (it should be possibile to create a dataset without a source)
