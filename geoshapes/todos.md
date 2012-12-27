@@ -6,6 +6,7 @@
 - table export #basic ok
 - map attributes #ok, in popup
 - map edit
+- table edit
 - Visualizations
 - In the datasetdescriptor model ,source should be optional (it should be possibile to create a dataset without a source)
 - Celery or cueless should be used to manage long running ajax calls: 

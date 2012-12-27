@@ -3,6 +3,12 @@
 {% load utilfilters %}
 
 
+{% block extra_head %}
+    <!--<link rel="stylesheet" href="http://www.editablegrid.net/editablegrid/editablegrid-2.0.1.css" type="text/css" media="screen">-->
+{% endblock %}
+
+
+
 {% block content %}
 
 <div class="container">
@@ -35,7 +41,7 @@
         <div style="clear:both">
            {% include "website/paginator.html" %}
         </div>
-        <table class="table">
+        <table id="dataset-data-table" class="table">
         <tr>
             {% for field in meta.non_geo_fields %}
             <td>
@@ -63,6 +69,7 @@
 {% endblock %}
 
 {% block extra_body %}
+    <script src="http://www.editablegrid.net/editablegrid/editablegrid-2.0.1.js"></script>
     <script>
         $(function(){
         
@@ -229,6 +236,26 @@
             ko.applyBindings(filterManagerView, document.getElementById('filter-container'));
             
             
+            //editable grid stuff
+            /*
+            var editableGrid = new EditableGrid("DemoGridAttach"); 
+            console.log("D", descriptor);
+            var gridMeta = [];
+            for(var field in descriptor.metadata.non_geo_fields){
+                var item = {name:field, dataType:'string', editable:true};
+                gridMeta.push(item);
+            }
+            editableGrid.load({metadata : gridMeta});
+            
+            editableGrid.attachToHTMLTable('dataset-data-table');
+			editableGrid.renderGrid();
+            */
+
+            
+            
+            
+            
+            
         });
         
         
@@ -236,3 +263,5 @@
         
     </script>
 {% endblock %}
+
+
