@@ -100,6 +100,7 @@
                 
                 
                 self.generateTable = function(url){
+                    console.log("url", url);
                     ajaxutils.openModal('generateTable', {'body': '<p>Generating dataset</p><img src="{{ STATIC_URL}}website/img/ajax-loader.gif"/>'});
                     $.ajax({
                         url : url,
@@ -123,12 +124,6 @@
                 
                 };
 
-                
-                
-                
-                
-                
-                
                 
                 
                 

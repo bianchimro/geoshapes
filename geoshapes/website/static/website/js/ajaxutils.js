@@ -23,7 +23,6 @@ ajaxutils.alertMessage = function(message, cssClass){
 ajaxutils.openModals = {};
 
 ajaxutils.openModal = function(modalName, options){
-    console.log("m", modalName, options);
     var options = options || {};
     var body = options.body || '';
     var head = options.head || '';

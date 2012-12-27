@@ -608,9 +608,9 @@ def add_shape_source_ajax(request):
             
             source_dict = instance_dict(source_instance)
             source_url = reverse("website.views.source", args=(source_instance.id,))
-            load_data_url = reverse("website.views.load_data_ajax", args=(source_instance.id,))
+            load_source_data_url = reverse("website.views.load_source_data_ajax", args=(source_instance.id,))
             
-            out = { 'source' : source_dict, 'source_url' : source_url, 'load_data_url' :  load_data_url }
+            out = { 'source' : source_dict, 'source_url' : source_url, 'load_source_data_url' :  load_source_data_url }
             response.result = out
             
         except Exception, e:

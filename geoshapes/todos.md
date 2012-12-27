@@ -1,6 +1,3 @@
-#Bugs
-- Shape import not working
-
 ## New features
 
 - table smart filter #ok - complete filter and use name
@@ -18,6 +15,7 @@
 
 
 ## Utils
+- Refactor js models and move to external files.
 - Modal dialog should handle confirm
 - Modal dialog should be updatable with message after it has been shown
 - Error messages should be propagated to modal dialogs
@@ -36,3 +34,8 @@
 ## FUTURE
 - a dataset should be a set of tables
 - enable relations between tables
+
+
+
+#Bugs
+B1 Shape import not working #fixed

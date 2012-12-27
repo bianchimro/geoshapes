@@ -71,6 +71,32 @@
                 
                 }
                 
+                self.generateTable = function(url){
+
+                    ajaxutils.openModal('generateTable', {'body': '<p>Generating dataset</p><img src="{{ STATIC_URL}}website/img/ajax-loader.gif"/>'});
+                    $.ajax({
+                        url : url,
+                        type : 'POST',
+                        dataType : 'json',
+                        success : function(response){
+                            ajaxutils.closeModal('generateTable');
+                            if(response.status == 200){
+                                    ajaxutils.alertMessage("Data loaded", "alert-success");
+                                    //window.location = window.location;
+                                    window.location = response.result.descriptor_url;
+                            
+                            }else{
+                                ajaxutils.alertMessage("Error:" + response.error, "alert-error");
+                            }
+                        
+                        }
+                    
+                    
+                    });
+                
+                };
+                
+                
                 self.createModels = function(){
                     var data = {
                         name : self.name(),
@@ -86,7 +112,9 @@
                         success : function(response){
                             if(response.status == 200){
                                 self.reset();
-                                window.location = response.result.source_url;
+                                console.log(response);
+                                //window.location = response.result.source_url;
+                                self.generateTable(response.result.load_source_data_url);
                             } else{
                                 ajaxutils.alertMessage("Error:" + response.error, "alert-error");
                             }
