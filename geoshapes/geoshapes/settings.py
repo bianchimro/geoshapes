@@ -132,6 +132,8 @@ INSTALLED_APPS = (
     'django_extensions',
     'ajaxuploader',
     'social_auth',
+    'djcelery',
+    'kombu.transport.django',
 
     
 )
@@ -223,3 +225,10 @@ DEBUG_TOOLBAR_CONFIG = { 'INTERCEPT_REDIRECTS' : False }
 
 SOUTH_LOGGING_ON = True
 SOUTH_LOGGING_FILE = os.path.join(BASE_PATH, "south.log")
+
+
+BROKER_URL = 'django://'
+
+
+import djcelery
+djcelery.setup_loader()

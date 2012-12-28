@@ -39,7 +39,7 @@ urlpatterns = patterns('website.views',
     url(r'^dataset_map_view/(?P<descriptor_id>\d+)/$', 'dataset_map_view', name="dataset_map_view"),
     
     url(r'^load_data_ajax/(?P<descriptor_id>\d+)/$', 'load_data_ajax', name="load_data_ajax"),
-
+    url(r'^load_data_ajax_celery/(?P<descriptor_id>\d+)/$', 'load_data_ajax_celery', name="load_data_ajax_celery"),
     
     #visualization
     url(r'^visualization/(?P<visualization_id>\d+)/$', 'visualization', name="visualization"),
@@ -53,7 +53,8 @@ urlpatterns = patterns('website.views',
     url(r'^$', 'index'),
     
 
-    
+    #celery
+    url(r'^get_task_status_url/$', 'get_task_status_url', name="get_task_status_url"),        
     
     
     

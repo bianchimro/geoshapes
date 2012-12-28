@@ -114,6 +114,8 @@
         var initial_descriptor = JSON.parse('{{descriptor_json|safe}}');
         var descriptoritems_order_ajax_url = '{{descriptoritems_order_ajax_url|safe}}';
         
+        var get_task_status_url = '{{get_task_status_url|safe}}';
+        
         var descriptor_drop_url = '{{descriptor_drop_url|safe}}';
     
         var DescriptorItem = function(options){
@@ -285,19 +287,41 @@
             
             };
             
+            
+            self.checkTask = function(task_id, callback){
+            
+                $.ajax({
+                    url : get_task_status_url,
+                    method : 'GET',
+                    data : {task_id : task_id},
+                    success : function(response){
+                        console.log(response);
+                        if(response.task.executed){
+                            callback(response);
+                        }
+                        else {
+                            setTimeout(function(){self.checkTask(task_id, callback)}, 2000);
+                        }
+                    }
+                });
+            
+            };
+            
             self.loadData = function(){
             
-                ajaxutils.openModal('dataLoad', {'body': '<p>Loading preview</p><img src="{{ STATIC_URL}}website/img/ajax-loader.gif"/>'});
+                ajaxutils.openModal('dataLoad', {'body': '<p>Reloading data</p><img src="{{ STATIC_URL}}website/img/ajax-loader.gif"/>'});
                 $.ajax({
                     type : 'POST',
                     dataType : 'json',
                     url : load_data_url,
                     success : function(response){
-                        ajaxutils.closeModal('dataLoad');
+                        
                         if(response.status == 200){
-                            ajaxutils.alertMessage("Tables recreated!", "alert-success");
+                            //ajaxutils.alertMessage("Tables recreated!", "alert-success");
+                            self.checkTask(response.result, function(){ajaxutils.closeModal('dataLoad');});
                         }
                         else{
+                            ajaxutils.closeModal('dataLoad');
                             ajaxutils.alertMessage("Error:" + response.error, "alert-error");
                         }
 

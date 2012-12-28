@@ -121,10 +121,13 @@ def descriptor(request, descriptor_id):
     source = base_source.get_subclass()
 
     
-    load_data_url = reverse('website.views.load_data_ajax', args=(descriptor.id,))
+    #load_data_url = reverse('website.views.load_data_ajax', args=(descriptor.id,))
+    load_data_url = reverse('website.views.load_data_ajax_celery', args=(descriptor.id,))
+    
     dataset_data_url = reverse('website.views.dataset_data_ajax', args=(descriptor.id,))
     descriptor_drop_url = reverse("website.views.drop_descriptor_ajax", args=(descriptor_id,))
     descriptoritems_order_ajax_url = reverse("website.views.descriptoritems_order_ajax")
+    get_task_status_url = reverse("website.views.get_task_status_url")
     
 
     descriptor_json = json.dumps(instance_dict(descriptor, recursive=True),cls=DjangoJSONEncoder)
@@ -144,6 +147,7 @@ def descriptor(request, descriptor_id):
             'dataset_data_url' : dataset_data_url,
             'descriptor_resource_url' : descriptor_resource_url,
             'descriptor_drop_url' : descriptor_drop_url,
+            'get_task_status_url' : get_task_status_url,
             'descriptoritems_order_ajax_url' : descriptoritems_order_ajax_url,
             'visualization_choices' : visualization_choices
         },
@@ -669,7 +673,7 @@ def filters_map_ajax(request):
 
 
 
-
+#TODO: move to shapesengine
 def visualization_ajax(request, visualization_id=None):
     
     response = AjaxResponse()
@@ -705,8 +709,6 @@ def visualization_ajax(request, visualization_id=None):
     return response.as_http_response()
 
 
-
-
 def visualization(request, visualization_id):
 
     visualization  = Visualization.objects.select_related().get(id=int(visualization_id))
@@ -740,5 +742,76 @@ def visualization_edit(request, visualization_id):
         },
     context_instance = RequestContext(request))
     
+
+
+
+
+#celery stuff
+from shapesengine.tasks import load_dataset_from_source, load_dataset
+from djcelery import views as celery_views
+
+def get_task_status_url(request):
+    task_id = request.GET['task_id']
+    print request.GET
+    print "t", task_id
+    return celery_views.is_task_successful(request, task_id)
+    
+
+def load_data_ajax_celery(request, descriptor_id):
+    
+    response = AjaxResponse()
+    try:
+        descriptor = DatasetDescriptor.objects.get(pk=int(descriptor_id))
+    except Exception, e:
+        response.status = 404
+        response.error = str(e)
+        return response.as_http_response()
+        
+        
+    out = {}
+    
+    if request.method == 'POST':
+        try:
+            deferred_result = load_dataset.delay(descriptor)
+            #descriptor.load_data()
+            #descriptor_dict = instance_dict(descriptor, recursive=True, properties=['metadata'])
+            #response.result = descriptor_dict
+            response.result = deferred_result.task_id
+            
+        except Exception, e:
+            response.error = str(e)
+            response.status = 500
+
+    return response.as_http_response()
+
+
+
+
+def load_source_data_ajax_celery(request, source_id):
+
+    response = AjaxResponse()
+    try:
+        base_source = Source.objects.get(pk=int(source_id))
+        source = base_source.get_subclass()
+        
+        descriptor = DatasetDescriptor(source=source)
+        descriptor.save()
+        
+        out = {}
+                
+        #source.generate_fields_for_descriptor(descriptor)
+        #descriptor.load_data()
+        deferred_result = load_dataset_from_source.delay(source, descriptor)
+        out['task_id'] = deferred_result.task_id
+
+        out['descriptor'] = instance_dict(descriptor, recursive=True, related_names=['items'], properties=['metadata'])
+        out['descriptor_url'] = reverse("website.views.descriptor", args=(descriptor.id,))
+        response.result = out
+
+    except Exception, e:
+        response.status = 500
+        response.error = str(e)
+        
+    return response.as_http_response()
 
 
