@@ -1,0 +1,88 @@
+{% load url from future %}
+<button class="btn btn-danger btn-small btn-fixed200 " onclick="$('#visualization-add-form').modal('show');">Add Visualization</button>
+
+<div id="visualization-add-form" class="modal fade hide">
+    <div class="modal-header">
+        <a href="#" class="close" data-bind="click: reset">×</a>
+        <h3>Add Visualization</h3>            
+    </div>
+    <div class="modal-body">
+        <p>Choose a visualization type</p>
+        <form>
+            <select  data-bind="value:type, options: visualizationChoices">
+            </select>
+       </form>
+
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-danger" id="save-document" data-bind="click: sumbitForm">Save</button>
+        <button class="btn" id="cancel-add-document" data-bind="click: reset">Cancel</button>
+    </div>
+</div>
+
+
+
+<script> 
+    $(function(){
+            
+            var visualization_post_url = '{% url "add_visualization_ajax" %}';
+            var descriptor_id = parseInt({{descriptor.id}})
+            var visualizationChoices = JSON.parse('{{visualization_choices|safe}}');
+            
+            // knockout form model.
+            var VFormModel = function(){
+    
+                var self=this;
+
+                self.visualizationChoices = visualizationChoices;
+                self.type = ko.observable(self.visualizationChoices[0]);
+                
+                self.reset = function(){
+                    //self.serverErrors([]);
+                    self.type('');
+                    $('#visualization-add-form').modal('hide');
+                
+                }
+                
+                
+                self.saveVisualization = function(url){
+                    ajaxutils.openModal('saveViz', {'body': '<p>Generating visualization</p><img src="{{ STATIC_URL}}website/img/ajax-loader.gif"/>'});
+                    
+                    var data = { type: self.type(), descriptor_id : descriptor_id};
+                    
+                    $.ajax({
+                        url : visualization_post_url,
+                        type : 'POST',
+                        dataType : 'json',
+                        data : data,
+                        success : function(response){
+                            ajaxutils.closeModal('saveViz');
+                            if(response.status == 200){
+                                    ajaxutils.alertMessage("Data loaded", "alert-success");
+                                    window.location = response.result.visualization_edit_url;
+                            
+                            }else{
+                                ajaxutils.alertMessage("Error:" + response.error, "alert-error");
+                            }
+                        }
+                    });
+                
+                };
+
+                
+                self.sumbitForm = function(){
+                  self.saveVisualization();
+                };
+                
+                
+            };
+            
+            //instantiating form model
+            var vfm = new VFormModel();
+            
+            
+            //binding form model
+            ko.applyBindings(vfm, document.getElementById("visualization-add-form"));
+            
+    });
+</script> 

@@ -36,7 +36,7 @@ from shapesengine.inspectors.csvinspector import CSVInspector
 
 DEFAULT_APP_NAME = 'shapesengine'
 DEFAULT_SHAPES_PATH = os.path.join(settings.MEDIA_ROOT, "shapes_uploads")
-BULK_IMPORT_BATCH_SIZE = 5000
+BULK_IMPORT_BATCH_SIZE = 10000
 
 #TODO: add classes for automatic creation of descriptors
 #TODO: add ShapeFile source
@@ -529,6 +529,8 @@ class DatasetDescriptor(models.Model):
             #instance.save()
             
             if loopcounter % BULK_IMPORT_BATCH_SIZE == 0:
+                #todo: remove print
+                print "inserting 10000 rows"
                 loopcounter = 0
                 Dataset.objects.bulk_create(instances_to_save)
                 instances_to_save = []
@@ -560,6 +562,38 @@ class DatasetDescriptorItem(models.Model):
     
     def get_field_name(self):
         return slugify(self.name).replace("-", "_")
+
+
+
+from shapesengine.visualization import * 
+
+VISUALIZATION_TYPE_CHOICES = []
+for x in ACTIVE_VISUALIZATIONS:
+    VISUALIZATION_TYPE_CHOICES.append([x,x])
+
+
+class Visualization(models.Model):
+    
+    descriptor = models.ForeignKey(DatasetDescriptor, related_name = 'visualizations')
+    type = models.CharField(max_length=200, choices=VISUALIZATION_TYPE_CHOICES)
+    options = PickledObjectField()
+    
+    @property
+    def view_template(self):
+        return get_view_template_for_class(self.type)
+        
+    @property
+    def edit_template(self):
+        return get_edit_template_for_class(self.type)
+    
+    def preprocess_context(self, context):
+        return preprocess_context_for_class(self.type, context, self)
+    
+        
+    def save(self, *args, **kwargs):
+        if not self.options:
+            self.options = {}
+        super(Visualization, self).save(*args, **kwargs)
         
     
    

@@ -27,7 +27,8 @@ def get_dataset_model(dymodel, regenerate=False, notify_changes=True):
     # Collect the dynamic model's class attributes
     attrs = {
         '__module__': __name__, 
-        '__unicode__': lambda s: '%s Dataset' % name
+        '__unicode__': lambda s: '%s Dataset' % name,
+        '__id__' : models.AutoField(primary_key=True)
     }
 
     class Meta:

@@ -1,0 +1,95 @@
+{% extends "website/base.html" %}
+{% load url from future %}
+
+
+
+{% block content %}
+
+<div id="visualization-container" class="container">
+
+    
+    <div class="row">
+        <div class="span12">
+            <h1>Edit visualization</h1>
+            <a href="{% url "website.views.descriptor" descriptor.id %}">Back to dataset</a>
+            
+            <form>
+            <textarea data-bind="value:text">
+            </textarea>
+            <br/>
+            
+            <button class="btn" data-bind="click: save">Save</button>
+            </form>
+    
+        </div>
+    </div>
+    
+    
+    
+    
+</div>
+
+
+{% endblock %}
+{% block extra_body %}
+    <script>
+        var visualization_ajax_url = '{{visualization_ajax_url|safe}}';
+        var visualization = JSON.parse('{{visualization_json|safe}}');
+        
+        console.log("viz", visualization);
+        
+        var FModel = function(){
+            var self=this;
+            self.text = ko.observable('');
+            
+            
+            self.loadOptions = function(){
+                var options = visualization.options;
+                if(options.text){
+                    self.text(options.text);
+                }
+            
+            };
+            
+            
+            self.getOptions = function(){
+                out = {};
+                out['text'] = self.text();
+                return out;
+            };            
+
+
+            self.save = function(){
+                var options = self.getOptions();
+                var data = {'options' : JSON.stringify(options)};
+            
+                $.ajax({
+                    url : visualization_ajax_url,
+                    type : 'POST',
+                    dataType : 'json',
+                    data : data,
+                    success : function(response){
+                        if(response.status == 200){
+                            console.log(response);
+                            ajaxutils.alertMessage("Visualization saved", "alert-success");
+                        } else{
+                            ajaxutils.alertMessage("Error:" + response.error, "alert-error");
+                        }
+                    
+                    }
+                
+                });
+            
+            };
+            
+            
+            self.loadOptions();
+        
+        
+        };
+        var fmodel = new FModel();
+        ko.applyBindings(fmodel, document.getElementById("visualization-container"))
+    </script>
+
+
+{% endblock %}

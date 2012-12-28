@@ -33,6 +33,7 @@ from shapesengine.shapeutils import ShapeChecker
 
 from shapesengine.models import *
 from shapesengine.mappings import *
+from shapesengine.visualization import ACTIVE_VISUALIZATIONS 
 
 from django.core.paginator import Paginator
 from website.pagination import get_page_or_1, get_paginator_page
@@ -130,6 +131,8 @@ def descriptor(request, descriptor_id):
     allowed_types = json.dumps(DESCRIPTORS_TYPES_MAP.keys(),cls=DjangoJSONEncoder)
     allowed_names = json.dumps(source.get_fields(),cls=DjangoJSONEncoder)
     
+    visualization_choices = json.dumps(ACTIVE_VISUALIZATIONS)
+    
     
     
     return render_to_response('website/descriptor.html', 
@@ -141,7 +144,8 @@ def descriptor(request, descriptor_id):
             'dataset_data_url' : dataset_data_url,
             'descriptor_resource_url' : descriptor_resource_url,
             'descriptor_drop_url' : descriptor_drop_url,
-            'descriptoritems_order_ajax_url' : descriptoritems_order_ajax_url
+            'descriptoritems_order_ajax_url' : descriptoritems_order_ajax_url,
+            'visualization_choices' : visualization_choices
         },
         context_instance = RequestContext(request))
 
@@ -664,5 +668,77 @@ def filters_map_ajax(request):
     return response.as_http_response()
 
 
+
+
+def visualization_ajax(request, visualization_id=None):
+    
+    response = AjaxResponse()
+
+    
+    if request.method == 'POST':
+        
+        try:
+            
+            if visualization_id:
+                viz = Visualization.objects.get(pk=int(visualization_id))
+            
+            else:
+                descriptor_id = int(request.POST['descriptor_id'])
+                descriptor  = DatasetDescriptor.objects.select_related().get(id=int(descriptor_id))    
+                type = request.POST['type']
+                viz = Visualization(descriptor=descriptor, type=type)
+            
+            if 'options' in request.POST:
+                options = json.loads(request.POST['options'])
+                viz.options = options;
+            
+            viz.save()
+            
+            viz_edit_url = reverse("website.views.visualization_edit", args=(viz.id,))
+            out = { 'visualization' : instance_dict(viz), 'visualization_edit_url':viz_edit_url }
+            response.result = out
+        
+        except Exception, e:
+                response.status = 500
+                response.error = str(e)
+    
+    return response.as_http_response()
+
+
+
+
+def visualization(request, visualization_id):
+
+    visualization  = Visualization.objects.select_related().get(id=int(visualization_id))
+    descriptor = visualization.descriptor
+    template = visualization.view_template
+    
+    context = { 'descriptor' : descriptor, 
+                'visualization' : visualization,
+            }
+            
+    context = visualization.preprocess_context(context)
+    
+    return render_to_response(template,
+        context,
+        context_instance = RequestContext(request))
+
+
+def visualization_edit(request, visualization_id):
+
+    visualization  = Visualization.objects.select_related().get(id=int(visualization_id))
+    visualization_json = json.dumps(instance_dict(visualization))
+    descriptor = visualization.descriptor
+    visualization_ajax_url = reverse("website.views.visualization_ajax", args=(visualization_id,))
+    template = visualization.edit_template
+    
+    return render_to_response(template,
+        {   'descriptor' : descriptor, 
+            'visualization' : visualization,
+            'visualization_json' : visualization_json,
+            'visualization_ajax_url' : visualization_ajax_url,
+        },
+    context_instance = RequestContext(request))
+    
 
 

@@ -40,9 +40,26 @@ urlpatterns = patterns('website.views',
     
     url(r'^load_data_ajax/(?P<descriptor_id>\d+)/$', 'load_data_ajax', name="load_data_ajax"),
 
+    
+    #visualization
+    url(r'^visualization/(?P<visualization_id>\d+)/$', 'visualization', name="visualization"),
+    url(r'^visualization_edit/(?P<visualization_id>\d+)/$', 'visualization_edit', name="visualization_edit"),
+
+    url(r'^add_visualization_ajax/$', 'visualization_ajax', name="add_visualization_ajax"),
+    url(r'^visualization_ajax/(?P<visualization_id>\d+)/$', 'visualization_ajax', name="visualization_ajax"),
+    
+    
+    #pages
     url(r'^$', 'index'),
     
 
+    
+    
+    
+    
+    
     url(r'^filters_map_ajax/$', 'filters_map_ajax', name='filters_map_ajax'),
+    
+    
 
 )

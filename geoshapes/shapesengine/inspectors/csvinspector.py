@@ -72,9 +72,10 @@ class CSVInspector(BaseInspector):
                     value = xline[name]
                     item.append(value)
 
-                data.append(item)
+                yield item
+                #data.append(item)
 
-        return data
+        #return data
 
 
 
@@ -87,9 +88,9 @@ class CSVInspector(BaseInspector):
                 for fi in line:
                     fix = sanitize(fi)
                     xline[fix]  = line[fi]
-                data.append(xline)
-
-        return data
+                #data.append(xline)
+                yield xline
+        #return data
                 
             
             

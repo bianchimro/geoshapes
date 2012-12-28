@@ -6,87 +6,68 @@
 <div class="container">
 
     <div class="row">
-        <div class="span12">
+        <div class="span12" id="descriptor-container">
             <h2>Dataset {{ descriptor.source.name }}</h2>
             <p>
                 This dataset was automatically generated from an uploaded file.
             </p>
+            <div>
             <h2>Structure</h2>
-            <div id="descriptor-container">
-                <button class="btn btn-small" data-bind="visible: !changingOrder(), click: changeFieldsOrder">Change field order</button>
-                <button class="btn btn-small" data-bind="visible: changingOrder(), click: stopChangeFieldsOrder">Stop changing</button>
-                <button class="btn btn-small btn-danger" data-bind="visible: changingOrder(), click: getFieldsOrder">Save field order</button>
-                <form>
-                    <table class="table table-bordered">
-                        <tr>
-                            <td data-bind="visible: changingOrder()"></td>
-                            <td>Field name</td>
-                            <td>Type</td>
-                        </tr>
-                        <tbody id="structure-table-body">
-                            {% for item in descriptor.items.all %}
-                            <tr class="descriptoritem" id="field_{{item.id}}" data-id="{{item.id}}">
-                            <td class="handle" data-bind="visible: changingOrder()"><i class="icon-magnet"></i></td>
-                            <td>
-                                {{ item.name }}
-                            </td>
-                            <td>
-                                {{ item.type }}
-                            </td>
-                            </tr>                
-                            {% endfor %}
-                        </tbody>
+                <div>
+                    <button class="btn btn-small" data-bind="visible: !changingOrder(), click: changeFieldsOrder">Change field order</button>
+                    <button class="btn btn-small" data-bind="visible: changingOrder(), click: stopChangeFieldsOrder">Stop changing</button>
+                    <button class="btn btn-small btn-danger" data-bind="visible: changingOrder(), click: getFieldsOrder">Save field order</button>
+                    <form>
+                        <table class="table table-bordered">
+                            <tr>
+                                <td data-bind="visible: changingOrder()"></td>
+                                <td>Field name</td>
+                                <td>Type</td>
+                            </tr>
+                            <tbody id="structure-table-body">
+                                {% for item in descriptor.items.all %}
+                                <tr class="descriptoritem" id="field_{{item.id}}" data-id="{{item.id}}">
+                                <td class="handle" data-bind="visible: changingOrder()"><i class="icon-magnet"></i></td>
+                                <td>
+                                    {{ item.name }}
+                                </td>
+                                <td>
+                                    {{ item.type }}
+                                </td>
+                                </tr>                
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </form>
+                </div>
+            </div>
+
+            <div>        
+                <h3>Browse</h3>
+                <button class="btn btn-info" data-bind="click: getRows">Preview records</button>
+                <a class="btn" href="{% url "website.views.dataset_table_view" descriptor.id %}">View as table</a>
+                {% if descriptor.source.source_class == 'ShapeSource' %}
+                    <a class="btn" href="{% url "website.views.dataset_map_view" descriptor.id %}">View as map</a>
+                {% endif %}        
+                <div id="rows-container" data-bind="if: rows()">
+                    <table class="table table-condensed table-bordered-table-striped">
+                    <tbody>
+                        <tr data-bind="html: $root.getTableHeader"></tr>
+                    </tbody>
+                    <tbody data-bind="foreach:rows()">
+                        <tr data-bind="html: getTableRow()"></tr>
+                    </tbody>
                     </table>
-                </form>
+                </div>
             </div>
-        </div>
-    </div>
-    
-
-    <div class="row">
-        <div class="span12">
-            <h3>Browse</h3>
-            <button class="btn btn-info" data-bind="click: getRows">Preview records</button>
-            <a class="btn" href="{% url "website.views.dataset_table_view" descriptor.id %}">View as table</a>
-            {% if descriptor.source.source_class == 'ShapeSource' %}
-                <a class="btn" href="{% url "website.views.dataset_map_view" descriptor.id %}">View as map</a>
-            {% endif %}        
-            <div id="rows-container" data-bind="if: rows()">
-                <table class="table table-condensed table-bordered-table-striped">
-                <tbody>
-                    <tr data-bind="html: $root.getTableHeader"></tr>
-                </tbody>
-                <tbody data-bind="foreach:rows()">
-                    <tr data-bind="html: getTableRow()"></tr>
-                </tbody>
-                </table>
+            
+            <div>
+                <h3>Export</h3>
+                <a class="btn" href="{% url "website.views.export_dataset" descriptor.id %}">Export to csv</a>
             </div>
-        </div>
-    </div>
-    
-    
-
-    <div class="row">
-        <div class="span12">
-            <h3>Export</h3>
-    
-            <a class="btn" href="{% url "website.views.export_dataset" descriptor.id %}">Export to csv</a>
-    
-        </div>
-    </div>
-
-
-    
-    <div class="row">
-        <div class="span12">
-            <h3>Visualizations</h3>
-        </div>
-    </div>
-    
-    <div class="row">
-        <div class="span12">
-            <div class="">
-            <h3>Operations</h3>
+            
+            <div>
+                <h3>Operations</h3>
                 <p>
                     <button class="btn btn-danger" data-bind="click: loadData">Reload data</button>
                     Restore data from the original data source. <b>This will destroy any change!</b>
@@ -95,9 +76,23 @@
                 <button class="btn btn-danger" data-bind="click: dropDescriptor">Delete this dataset</button>
                 </p>
             </div>
+    
         </div>
     </div>
-    
+
+    <div class="row">
+        <div class="span12">
+            <h3>Visualizations</h3>
+            {% for viz in descriptor.visualizations.all %}
+                <div>
+                {{viz.type}}: 
+                <a class="btn btn-small" href="{% url "website.views.visualization_edit" viz.id %}">Edit</a>
+                <a class="btn btn-small" href="{% url "website.views.visualization" viz.id %}">View</a>
+                </div>
+            {% endfor %}
+            {% include "website/add_visualization.html" %}
+        </div>
+    </div>
     
 </div>
 
@@ -106,16 +101,6 @@
 
 
 {% block extra_body %}
-
-
- <script>
-    $(function() {
-        
-        
-    });
-    </script>
-
-
 
 <script>
 
@@ -195,13 +180,11 @@
             };
             
             self.deserialize = function(obj){
-            
                 self.id = obj.id;
                 self.descriptorItems([]);
                 for(var i=0,n=obj.items.length;i<n;i++){
                     
                     var descriptor = obj.items[i];
-                    console.log("d", descriptor);
                     var item = new DescriptorItem({name:descriptor.name, type:descriptor.type, id:descriptor.id });           
                     self.descriptorItems.push(item);
                     
@@ -210,8 +193,6 @@
             
             
             self.serialize = function(){
-            
-            
                 var data = {
                     id : self.id
                 };
@@ -239,13 +220,11 @@
                 var fields = [];
                 $("#structure-table-body > .descriptoritem").each(
                     function(index, item){
-//                        console.log(index, item);
                         var it = { order: index, id: $(item).attr('data-id')}
                         fields.push(it);
                     }
                 );
                 
-                console.log(fields);
                 
                 $.ajax({
                 
@@ -254,7 +233,6 @@
                     type : 'POST',
                     dataType : 'json',
                     success : function(response){
-                        console.log("frr", response);
                         if(response.status == 200){
                             ajaxutils.alertMessage("Fields order saved", "alert-succes");
                             self.stopChangeFieldsOrder();
@@ -311,7 +289,6 @@
             
                 ajaxutils.openModal('dataLoad', {'body': '<p>Loading preview</p><img src="{{ STATIC_URL}}website/img/ajax-loader.gif"/>'});
                 $.ajax({
-                    
                     type : 'POST',
                     dataType : 'json',
                     url : load_data_url,
@@ -340,16 +317,11 @@
                     type : 'POST',
                     success : function(response){
                         ajaxutils.closeModal('deleteDataset');
-                        console.log(response);
                         if(response.status == 200){
                             window.location  = '{% url "website.views.descriptors" %}';
                         }
                     }
-                
-                
                 });
-            
-            
             };
             
             
@@ -365,7 +337,6 @@
                         ajaxutils.closeModal('rowsLoading');
                         if(response.status == 200){
                             var result = response.result;
-                            console.log("r", result);
                             if(result.rows){
                                 self.metadata(result.descriptor.metadata);
                                 self.loadRows(result.rows);
@@ -422,20 +393,16 @@
                     }
                 
                 });
-            
-            
             };
             
             
             //self.load();
             self.prepareSortable();
-            
-            
         
         };
     
         var descriptorForm = new DescriptorForm();
-        ko.applyBindings(descriptorForm, document.getElementById("descriptor-contaier"));
+        ko.applyBindings(descriptorForm, document.getElementById("descriptor-container"));
     
     
     });
