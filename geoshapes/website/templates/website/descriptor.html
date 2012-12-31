@@ -94,6 +94,23 @@
         </div>
     </div>
     
+     <div class="row">
+        <div class="span12">
+            <h3>Visualizations</h3>
+            {% for regression_model in descriptor.regression_models.all %}
+                <div>
+                {{regression_model.type}}: 
+                <a class="btn btn-small" href="{% url "website.views.regressor_edit" regression_model.id %}">Edit</a>
+                <a class="btn btn-small" href="{% url "website.views.regressor" regression_model.id %}">View</a>
+                </div>
+            {% endfor %}
+            {% include "website/add_regression.html" %}
+        </div>
+    </div>
+
+    
+    
+    
 </div>
 
 

@@ -2,6 +2,7 @@ import uuid
 import json
 import csv
 import os
+import numpy
 
 from django.core.exceptions import ValidationError
 from django.conf import settings
@@ -9,6 +10,7 @@ from django.conf import settings
 #from django.db import models
 from django.contrib.gis.db import models
 from django.db.models.loading import cache
+from django.db.models import Q
 #from django.db.models.signals import post_save, pre_save, pre_delete, post_delete
 
 from django.template.defaultfilters import slugify
@@ -158,7 +160,47 @@ class DyModel(models.Model):
                 out.append(f.get_field_name())
         return out
 
+    @property        
+    def numeric_fields(self):
+        out = []
+        for f in self.dyfields.all():
+            if f.type in utils.NUMERIC_FIELDS:
+                out.append(f.get_field_name())
+        return out
+
         
+
+    
+    #data accessors
+    def get_non_null_filter_kwargs(self, column_names):
+    
+        first_col = column_names[0]
+        args = {}
+        for col_name in column_names:
+            args_key = col_name + "__isnull"
+            args[args_key] = False
+        return args
+        
+    
+    def get_values_dict(self, column_names, non_null=True):
+    
+        base = self.Dataset.objects
+        if(non_null):
+            kwargs = self.get_non_null_filter_kwargs(column_names)
+            base = base.filter(**kwargs)
+        
+        return base.values(*column_names)
+        
+    def get_values_list(self, column_names, non_null=True):
+        
+        base = self.Dataset.objects
+        if(non_null):
+            kwargs = self.get_non_null_filter_kwargs(column_names)
+            base = base.filter(**kwargs)
+        return base.values_list(*column_names)
+    
+    
+    
     
     
 class DyField(models.Model):
@@ -596,6 +638,94 @@ class Visualization(models.Model):
         super(Visualization, self).save(*args, **kwargs)
         
     
+
+import cPickle
+from shapesengine.regression import *
+
+REGRESSION_TYPE_CHOICES = []
+for x in ACTIVE_REGRESSION_MODELS:
+    REGRESSION_TYPE_CHOICES.append([x,x])
+
+
+class RegressionModel(models.Model):
+
+    descriptor = models.ForeignKey(DatasetDescriptor, related_name = 'regression_models')
+    type = models.CharField(max_length=200, choices=REGRESSION_TYPE_CHOICES)
+    
+    y_column = models.CharField(max_length=200)
+    x_columns = PickledObjectField(default=[])
+    
+    options = PickledObjectField(default={})
+
+    regressor = PickledObjectField()  
+    cv_scores = PickledObjectField()
+    
+    trained = models.BooleanField(default=False)
+    
+    
+    def __init__(self, *args, **kwargs):
+        
+        super(RegressionModel, self).__init__(*args, **kwargs)
+        if not self.options:
+            self.options = {}
+    
+    
+    def get_regressor(self):
+        if not self.type:
+            return None
+            
+        if self.regressor:
+            return cPickle.loads(self.regressor)
+            
+        cls = get_regression_class(self.type)
+        return cls(**self.options)
+        
+        
+    def get_training_set(self):
+        
+        col_names = [self.y_column]
+        col_names.extend(self.x_columns)
+        data = self.descriptor.dymodel.get_values_list(col_names)
+
+        data = numpy.array(data);
+        
+        y_data = data[:,0]
+        x_data = data[:, :-1]
+        
+        return x_data, y_data
+        
+        
+    def train(self):
+        
+        regressor_cls = get_regression_class(self.type)
+        regressor = regressor_cls(**self.options)
+
+        x_data, y_data = self.get_training_set()
+
+        regressor.train(x_data, y_data)
+
+        self.cv_scores = regressor.cv_scores(x_data,y_data)
+        self.regressor = cPickle.dumps(regressor)
+        
+        self.trained = True
+        self.save()
+    
+        
+    
+    def save(self, *args, **kwargs):
+        super(RegressionModel, self).save(*args, **kwargs)
+      
+
+
+
+
+
+
+
+
+
+
+
    
 #creating stored models
 from shapesengine.dynamic_models import build_existing_dataset_models

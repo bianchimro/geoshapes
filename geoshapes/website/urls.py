@@ -49,6 +49,17 @@ urlpatterns = patterns('website.views',
     url(r'^visualization_ajax/(?P<visualization_id>\d+)/$', 'visualization_ajax', name="visualization_ajax"),
     
     
+    #regression models
+    url(r'^regressor/(?P<regressor_id>\d+)/$', 'regressor', name="regressor"),
+    url(r'^regressor_edit/(?P<regressor_id>\d+)/$', 'regressor_edit', name="regressor_edit"),
+    url(r'^train_regressor_ajax/(?P<regressor_id>\d+)/$', 'train_regressor_ajax', name="train_regressor_ajax"),
+    
+
+    url(r'^add_regressor_ajax/$', 'regressor_ajax', name="add_regressor_ajax"),
+    url(r'^regressor_ajax/(?P<regressor_id>\d+)/$', 'regressor_ajax', name="regressor_ajax"),
+
+    
+    
     #pages
     url(r'^$', 'index'),
     

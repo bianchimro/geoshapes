@@ -1,0 +1,229 @@
+{% extends "website/base.html"%}
+{% load url from future %}
+
+
+{% block content %}
+
+<div id="regressor-container" class="container">
+
+    
+    <div class="row">
+        <div class="span12">
+            <h1>Edit regression model</h1>
+            <a href="{% url "website.views.descriptor" descriptor.id %}">Back to dataset</a>
+            
+            <form>
+                <div>Target var:<span class="badge" data-bind="text: ycolumn"></span></div>
+                <div>Regression vars:
+                <span data-bind="foreach: xcolumns()">
+                    <span class="badge" data-bind="text: $data"></span>&nbsp;
+                </span>
+                </div>
+            <br/>
+            <button class="btn" data-bind="click: save">Save</button>
+            <button class="btn" data-bind="click: trainModel">Train</button>
+            </form>
+    
+        </div>
+    </div>
+    
+    
+    
+    <div class="row">
+        <div class="span4 fieldnames">
+            Available fields
+            <ul id="regression-fieldnames" class="droppable">
+            {% for field_name in descriptor.dymodel.numeric_fields %}
+                <li class="draggable" data-field-name="{{ field_name }}"><span class="label">{{ field_name }}</span></li>
+            {% endfor %}
+            </ul>
+            <button class="btn btn-small" data-bind="click: fillRegression">Add all to regression</button>
+        </div>
+        <div class="span4">
+            Y column
+            <ul id="regression-ycolumn" class="droppable-single"></ul>        
+        </div>
+        <div class="span4">
+            X columns
+            <ul id="regression-xcolumns" class="droppable"></ul>        
+        </div>
+    </div>
+    
+    
+    
+    
+</div>
+
+
+{% endblock %}
+{% block extra_body %}
+    <script>
+        var regressor_ajax_url = '{{regressor_ajax_url|safe}}';
+        var regressor_train_ajax_url = '{{regressor_train_ajax_url|safe}}';
+        var regressor = JSON.parse('{{regression_model_json|safe}}');
+        
+        console.log("r", regressor);
+        
+        var RModel = function(){
+            var self=this;
+            //self.text = ko.observable('');
+            self.ycolumn = ko.observable('');
+            self.xcolumns = ko.observableArray([]);
+            
+            self.yselector = "#regression-ycolumn";
+            self.xselector = "#regression-xcolumns";
+            self.fieldNamesSelector = "#regression-fieldnames";
+            
+            
+            self.loadOptions = function(){
+                var options = regressor.options;
+                if(options.text){
+                    //self.text(options.text);
+                }
+            
+            };
+            
+            self.fillRegression = function(){
+                xColumnsElement = $(self.xselector);
+                $("li", $(self.fieldNamesSelector)).each(function(index, item){
+                    var fieldName = $(item).attr("data-field-name");
+                    self.xcolumns.push(fieldName);
+                    $(item).detach().css({top: 0,left: 0}).appendTo(xColumnsElement);
+                });
+            
+            };
+            
+            
+            self.getColumns = function(){
+                var fieldNames = [];
+                $(self.yselector).each(function(index, item){
+                
+                    var fieldName = $(item).attr("data-field-name");
+                    fieldNames.push( fieldName);
+                });
+                return fieldNames;
+            
+            }
+            
+            
+            self.getOptions = function(){
+                out = {};
+                //out['text'] = self.text();
+                return out;
+            };            
+
+
+            self.save = function(){
+                var options = self.getOptions();
+                var xcolumns = JSON.stringify(self.xcolumns())
+                var ycolumn = self.ycolumn();
+                var data = {'options' : JSON.stringify(options), 'y_column' : ycolumn, 'x_columns' : xcolumns};
+            
+                $.ajax({
+                    url : regressor_ajax_url,
+                    type : 'POST',
+                    dataType : 'json',
+                    data : data,
+                    success : function(response){
+                        if(response.status == 200){
+                            console.log(response);
+                            ajaxutils.alertMessage("Regressor saved", "alert-success");
+                        } else{
+                            ajaxutils.alertMessage("Error:" + response.error, "alert-error");
+                        }
+                    
+                    }
+                
+                });
+            
+            };
+            
+            
+            self.trainModel = function(){
+                $.ajax({
+                    url : regressor_train_ajax_url,
+                    type : 'POST',
+                    dataType : 'json',
+                    success : function(response){
+                        if(response.status == 200){
+                            console.log(response);
+                            ajaxutils.alertMessage("Regressor trained!!", "alert-success");
+                        } else{
+                            ajaxutils.alertMessage("Error:" + response.error, "alert-error");
+                        }
+                    
+                    }
+                
+                });
+            
+            
+            };
+            
+            
+            self.loadOptions();
+        
+        
+        };
+        
+        $(function(){
+        
+            var rmodel = new RModel();
+            ko.applyBindings(rmodel, document.getElementById("regressor-container"))
+        
+        
+            var dragSource = $("#regression-fieldnames");
+            
+            $( ".draggable" ).draggable({revert:true, snapMode:'inner'});
+            $( "#regression-fieldnames" ).droppable({
+                drop: function(ev, ui) {
+                    var dropped = ui.draggable;
+                    //rmodel.xcolumns.push((dropped.attr("data-field-name")));
+                    var droppedOn = $(this);
+                    $(dropped).detach().css({top: 0,left: 0}).appendTo(droppedOn);
+                    
+                    var fieldName = dropped.attr("data-field-name");
+                    rmodel.xcolumns.remove(fieldName);
+                },
+            
+            });
+            $( "#regression-xcolumns" ).droppable({
+                drop: function(ev, ui) {
+                    var dropped = ui.draggable;
+                    rmodel.xcolumns.push((dropped.attr("data-field-name")));
+                    var droppedOn = $(this);
+                    $(dropped).detach().css({top: 0,left: 0}).appendTo(droppedOn);
+                },
+                out :  function(ev, ui) {
+                    var dropped = ui.draggable;
+                    var droppedOn = $(this);
+
+                }
+            });
+            $( "#regression-ycolumn" ).droppable({
+            
+                drop: function(ev, ui) {
+                    var dropped = ui.draggable;
+                    var droppedOn = $(this);
+                    var lis = $("li", droppedOn);
+                    
+                    var fieldName = dropped.attr("data-field-name");
+                    rmodel.xcolumns.remove(fieldName);
+                    
+                    rmodel.ycolumn(fieldName);
+                    if(lis.length > 0){
+                        lis.each(function(index, item){
+                            $(item).detach().css({top: 0,left: 0}).appendTo(dragSource);    
+                        });
+                    
+                    }
+                    $(dropped).detach().css({top: 0,left: 0}).appendTo(droppedOn);
+                }
+            });
+            
+            
+        });
+    </script>
+
+
+{% endblock %}
+

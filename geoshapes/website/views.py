@@ -34,6 +34,7 @@ from shapesengine.shapeutils import ShapeChecker
 from shapesengine.models import *
 from shapesengine.mappings import *
 from shapesengine.visualization import ACTIVE_VISUALIZATIONS 
+from shapesengine.regression import ACTIVE_REGRESSION_MODELS
 
 from django.core.paginator import Paginator
 from website.pagination import get_page_or_1, get_paginator_page
@@ -135,6 +136,7 @@ def descriptor(request, descriptor_id):
     allowed_names = json.dumps(source.get_fields(),cls=DjangoJSONEncoder)
     
     visualization_choices = json.dumps(ACTIVE_VISUALIZATIONS)
+    regression_choices = json.dumps(ACTIVE_REGRESSION_MODELS)
     
     
     
@@ -149,7 +151,8 @@ def descriptor(request, descriptor_id):
             'descriptor_drop_url' : descriptor_drop_url,
             'get_task_status_url' : get_task_status_url,
             'descriptoritems_order_ajax_url' : descriptoritems_order_ajax_url,
-            'visualization_choices' : visualization_choices
+            'visualization_choices' : visualization_choices,
+            'regression_choices': regression_choices
         },
         context_instance = RequestContext(request))
 
@@ -741,6 +744,112 @@ def visualization_edit(request, visualization_id):
             'visualization_ajax_url' : visualization_ajax_url,
         },
     context_instance = RequestContext(request))
+
+
+
+
+def regressor_ajax(request, regressor_id=None):
+    
+    response = AjaxResponse()
+    
+    if request.method == 'POST':
+        
+        try:
+            if regressor_id:
+                regression_model = RegressionModel.objects.get(pk=int(regressor_id))
+            
+            else:
+                descriptor_id = int(request.POST['descriptor_id'])
+                descriptor  = DatasetDescriptor.objects.select_related().get(id=int(descriptor_id))    
+                type = request.POST['type']
+                regression_model = RegressionModel(descriptor=descriptor, type=type)
+            
+            if 'options' in request.POST:
+                options = json.loads(request.POST['options'])
+                regression_model.options = options;
+                
+            
+            if 'x_columns' in request.POST:
+                x_columns = json.loads(request.POST['x_columns'])
+                regression_model.x_columns = x_columns;
+
+            if 'y_column' in request.POST:
+                y_column = request.POST['y_column']
+                regression_model.y_column = y_column;
+            
+            
+            regression_model.save()
+            
+            regression_model_edit_url = reverse("website.views.regressor_edit", args=(regression_model.id,))
+            out = { 'regression_model' : instance_dict(regression_model), 'regression_model_edit_url':regression_model_edit_url }
+            response.result = out
+        
+        except Exception, e:
+                response.status = 500
+                response.error = str(e)
+    
+    return response.as_http_response()
+    
+    
+def train_regressor_ajax(request, regressor_id):
+    response = AjaxResponse()
+    
+    
+    try:
+        regression_model = RegressionModel.objects.get(pk=int(regressor_id))
+        regression_model.train()
+        
+        regression_model_edit_url = reverse("website.views.regressor_edit", args=(regression_model.id,))
+        
+        out = { 'regression_model' : instance_dict(regression_model,ignore_fields=['regressor']), 'regression_model_edit_url':regression_model_edit_url }
+        response.result = out
+        
+    
+    except Exception, e:
+                response.status = 500
+                response.error = str(e)
+    
+    
+    return response.as_http_response()
+
+def regressor(request, regressor_id):
+
+    regression_model  = RegressionModel.objects.select_related().get(id=int(regressor_id))
+    descriptor = regression_model.descriptor
+    template = "website/regression_model.html"
+    
+    context = { 'descriptor' : descriptor, 
+                'regression_model' : regression_model,
+            }
+            
+    context = visualization.preprocess_context(context)
+    
+    return render_to_response(template,
+        context,
+        context_instance = RequestContext(request))
+
+
+def regressor_edit(request, regressor_id):
+
+    regression_model  = RegressionModel.objects.select_related().get(id=int(regressor_id))
+    regression_model_json = json.dumps(instance_dict(regression_model, ignore_fields=['regressor']))
+    descriptor = regression_model.descriptor
+    regressor_ajax_url = reverse("website.views.regressor_ajax", args=(regressor_id,))
+    regressor_train_ajax_url = reverse("website.views.train_regressor_ajax", args=(regressor_id,))
+    
+    
+    template = "website/regression_model.html"
+    
+    return render_to_response(template,
+        {   'descriptor' : descriptor, 
+            'regression_model' : regression_model,
+            'regression_model_json' : regression_model_json,
+            'regressor_ajax_url' : regressor_ajax_url,
+            'regressor_train_ajax_url':regressor_train_ajax_url,
+        },
+    context_instance = RequestContext(request))
+
+
     
 
 

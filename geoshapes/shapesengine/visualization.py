@@ -2,13 +2,18 @@ import sys
 
 ACTIVE_VISUALIZATIONS = ['TextVisualization', 'TableVisualization']
 
-def get_view_template_for_class(class_name):
+
+def get_visualization_class(class_name):
     cls = getattr(sys.modules[__name__], class_name)
+    return cls
+
+def get_view_template_for_class(class_name):
+    cls = get_visualization_class(class_name)
     fun = getattr(cls, 'get_view_template');
     return fun()
 
 def get_edit_template_for_class(class_name):
-    cls = getattr(sys.modules[__name__], class_name)
+    cls = get_visualization_class(class_name)
     fun = getattr(cls, 'get_edit_template');
     return fun()
 

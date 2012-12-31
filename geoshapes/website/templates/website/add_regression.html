@@ -1,0 +1,88 @@
+{% load url from future %}
+<button class="btn btn-danger btn-small btn-fixed200 " onclick="$('#regrmodel-add-form').modal('show');">Add regression model</button>
+
+<div id="regrmodel-add-form" class="modal fade hide">
+    <div class="modal-header">
+        <a href="#" class="close" data-bind="click: reset">×</a>
+        <h3>Add Regression model</h3>            
+    </div>
+    <div class="modal-body">
+        <p>Choose a visualization type</p>
+        <form>
+            <select  data-bind="value:type, options: regressionChoices">
+            </select>
+       </form>
+
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-danger" id="save-document-r" data-bind="click: sumbitForm">Save</button>
+        <button class="btn" id="cancel-add-document-r" data-bind="click: reset">Cancel</button>
+    </div>
+</div>
+
+
+
+<script> 
+    $(function(){
+            
+            var regressor_post_url = '{% url "add_regressor_ajax" %}';
+            var descriptor_id = parseInt({{descriptor.id}})
+            var regressionChoices = JSON.parse('{{regression_choices|safe}}');
+            
+            // knockout form model.
+            var VFormModel = function(){
+    
+                var self=this;
+
+                self.regressionChoices = regressionChoices;
+                self.type = ko.observable(self.regressionChoices[0]);
+                
+                self.reset = function(){
+                    //self.serverErrors([]);
+                    self.type('');
+                    $('#regrmodel-add-form').modal('hide');
+                
+                }
+                
+                
+                self.saveVisualization = function(url){
+                    ajaxutils.openModal('saveViz', {'body': '<p>Generating visualization</p><img src="{{ STATIC_URL}}website/img/ajax-loader.gif"/>'});
+                    
+                    var data = { type: self.type(), descriptor_id : descriptor_id};
+                    
+                    $.ajax({
+                        url : regressor_post_url,
+                        type : 'POST',
+                        dataType : 'json',
+                        data : data,
+                        success : function(response){
+                            ajaxutils.closeModal('saveViz');
+                            if(response.status == 200){
+                                    ajaxutils.alertMessage("Data loaded", "alert-success");
+                                    window.location = response.result.regression_model_edit_url;
+                            
+                            }else{
+                                ajaxutils.alertMessage("Error:" + response.error, "alert-error");
+                            }
+                        }
+                    });
+                
+                };
+
+                
+                self.sumbitForm = function(){
+                  self.saveVisualization();
+                };
+                
+                
+            };
+            
+            //instantiating form model
+            var vfm = new VFormModel();
+            
+            
+            //binding form model
+            ko.applyBindings(vfm, document.getElementById("regrmodel-add-form"));
+            
+    });
+</script> 

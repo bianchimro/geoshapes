@@ -10,6 +10,8 @@ GEOM_FIELDS = ['PointField', 'MultiPointField', 'PolygonField', 'MultiPolygonFie
             
 DATETIME_FIELDS = ['DateTimeField', 'DateField']
 
+NUMERIC_FIELDS = ['IntegerField', 'FloatField']
+
 
 def is_geom_field(field_type):
     return field_type.upper() in [x.upper() for x in GEOM_FIELDS]

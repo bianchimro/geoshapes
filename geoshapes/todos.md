@@ -1,3 +1,5 @@
+## PLEASE WRITE TESTS!!!!
+
 ## New features
 
 - table smart filter #ok - complete filter and use name
@@ -8,10 +10,15 @@
 - map edit
 - table edit
 - Visualizations
+- Models
+  linear: http://scikit-learn.org/stable/modules/linear_model.html
+  
 - In the datasetdescriptor model ,source should be optional (it should be possibile to create a dataset without a source)
 - Celery or cueless should be used to manage long running ajax calls: 
   
   https://zapier.com/blog/2012/01/30/async-celery-example-why-and-how/
+  
+  
 
 
 
