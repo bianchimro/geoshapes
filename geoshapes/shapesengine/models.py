@@ -709,6 +709,17 @@ class RegressionModel(models.Model):
         
         self.trained = True
         self.save()
+        
+    def get_cv_results(self):
+        
+        if not self.trained:
+            return None
+            
+        regressor_cls = get_regression_class(self.type)
+        regressor = regressor_cls(**self.options)
+
+        x_data, y_data = self.get_training_set()
+        return regressor.cv_results(x_data, y_data)
     
         
     

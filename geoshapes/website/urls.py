@@ -53,6 +53,7 @@ urlpatterns = patterns('website.views',
     url(r'^regressor/(?P<regressor_id>\d+)/$', 'regressor', name="regressor"),
     url(r'^regressor_edit/(?P<regressor_id>\d+)/$', 'regressor_edit', name="regressor_edit"),
     url(r'^train_regressor_ajax/(?P<regressor_id>\d+)/$', 'train_regressor_ajax', name="train_regressor_ajax"),
+    url(r'^cv_results_regressor_ajax/(?P<regressor_id>\d+)/$', 'cv_results_regressor_ajax', name="cv_results_regressor_ajax"),
     
 
     url(r'^add_regressor_ajax/$', 'regressor_ajax', name="add_regressor_ajax"),

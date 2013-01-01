@@ -22,6 +22,8 @@
             <br/>
             <button class="btn" data-bind="click: save">Save</button>
             <button class="btn" data-bind="click: trainModel">Train</button>
+            <button class="btn" data-bind="click: getCvResults">getCvResults</button>
+            
             </form>
     
         </div>
@@ -52,14 +54,32 @@
     
     
     
+    
+    <div class="row">
+        <div class="span12">
+            <h2>Model information</h2>
+            <div>
+                Model type : {{ regression_model.type }}
+            </div>
+            <div>
+                Model trained : <span data-bind="text: trained"></span>
+            </div>
+            <div id="model-train-scatter" class="scatterplot"></div>
+        </div>
+    </div>
+    
 </div>
 
 
 {% endblock %}
 {% block extra_body %}
+
+    <script src="{{ STATIC_URL}}website/js/vendor/jquery.jqplot.min.js"></script>
+
     <script>
         var regressor_ajax_url = '{{regressor_ajax_url|safe}}';
         var regressor_train_ajax_url = '{{regressor_train_ajax_url|safe}}';
+        var cv_results_regressor_ajax_url = '{{cv_results_regressor_ajax_url|safe}}';
         var regressor = JSON.parse('{{regression_model_json|safe}}');
         
         console.log("r", regressor);
@@ -69,17 +89,27 @@
             //self.text = ko.observable('');
             self.ycolumn = ko.observable('');
             self.xcolumns = ko.observableArray([]);
+            self.trained = ko.observable(false);
             
             self.yselector = "#regression-ycolumn";
             self.xselector = "#regression-xcolumns";
             self.fieldNamesSelector = "#regression-fieldnames";
             
             
-            self.loadOptions = function(){
-                var options = regressor.options;
+            self.loadRegressor = function(obj){
+                var options = obj.options;
                 if(options.text){
                     //self.text(options.text);
                 }
+                
+                if(obj.y_column){
+                    self.ycolumn(obj.y_column)
+                }
+                if(obj.x_columns){
+                    self.xcolumns(obj.x_columns)                
+                }                
+                
+                self.trained(obj.trained);
             
             };
             
@@ -148,6 +178,7 @@
                         if(response.status == 200){
                             console.log(response);
                             ajaxutils.alertMessage("Regressor trained!!", "alert-success");
+                            
                         } else{
                             ajaxutils.alertMessage("Error:" + response.error, "alert-error");
                         }
@@ -160,15 +191,41 @@
             };
             
             
-            self.loadOptions();
-        
+            self.getCvResults = function(){
+                $.ajax({
+                    url : cv_results_regressor_ajax_url,
+                    type : 'POST',
+                    dataType : 'json',
+                    success : function(response){
+                        if(response.status == 200){
+                            console.log(response);
+                            ajaxutils.alertMessage("Results here!!", "alert-success");
+                            var plot1 = $.jqplot ('model-train-scatter', 
+                                [response.result],
+                                {
+                                    seriesDefaults : { showLine : false }
+                                
+                                });
+                            
+                        } else{
+                            ajaxutils.alertMessage("Error:" + response.error, "alert-error");
+                        }
+                    
+                    }
+                
+                });
+            
+            
+            };
+            
         
         };
         
         $(function(){
         
             var rmodel = new RModel();
-            ko.applyBindings(rmodel, document.getElementById("regressor-container"))
+            ko.applyBindings(rmodel, document.getElementById("regressor-container"));
+            rmodel.loadRegressor(regressor);
         
         
             var dragSource = $("#regression-fieldnames");

@@ -791,6 +791,23 @@ def regressor_ajax(request, regressor_id=None):
     return response.as_http_response()
     
     
+def cv_results_regressor_ajax(request, regressor_id):
+    response = AjaxResponse()
+    
+    
+    try:
+        regression_model = RegressionModel.objects.get(pk=int(regressor_id))
+        results = regression_model.get_cv_results()
+        response.result = results
+    
+    except Exception, e:
+       response.status = 500
+       response.error = str(e)
+    
+    
+    return response.as_http_response()
+    
+    
 def train_regressor_ajax(request, regressor_id):
     response = AjaxResponse()
     
@@ -811,6 +828,7 @@ def train_regressor_ajax(request, regressor_id):
     
     
     return response.as_http_response()
+
 
 def regressor(request, regressor_id):
 
@@ -836,7 +854,7 @@ def regressor_edit(request, regressor_id):
     descriptor = regression_model.descriptor
     regressor_ajax_url = reverse("website.views.regressor_ajax", args=(regressor_id,))
     regressor_train_ajax_url = reverse("website.views.train_regressor_ajax", args=(regressor_id,))
-    
+    cv_results_regressor_ajax_url = reverse("website.views.cv_results_regressor_ajax", args=(regressor_id,))
     
     template = "website/regression_model.html"
     
@@ -846,6 +864,7 @@ def regressor_edit(request, regressor_id):
             'regression_model_json' : regression_model_json,
             'regressor_ajax_url' : regressor_ajax_url,
             'regressor_train_ajax_url':regressor_train_ajax_url,
+            'cv_results_regressor_ajax_url' : cv_results_regressor_ajax_url,
         },
     context_instance = RequestContext(request))
 
