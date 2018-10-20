@@ -110,6 +110,8 @@
                 }                
                 
                 self.trained(obj.trained);
+                
+                self.bootStrapColumns();
             
             };
             
@@ -122,6 +124,25 @@
                 });
             
             };
+            
+            
+            self.bootStrapColumns = function(){
+                xColumnsElement = $(self.xselector);
+                yColumnElement = $(self.yselector);
+                
+                $("li", $(self.fieldNamesSelector)).each(function(index, item){
+                    var fieldName = $(item).attr("data-field-name");
+                    if(self.xcolumns().indexOf(fieldName) > -1){
+                        $(item).detach().css({top: 0,left: 0}).appendTo(xColumnsElement);
+                    } else if (fieldName == self.ycolumn()){
+                        $(item).detach().css({top: 0,left: 0}).appendTo(yColumnElement);
+                    }
+                });
+            
+            };
+            
+            
+            
             
             
             self.getColumns = function(){
